@@ -1,0 +1,105 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:is(.dark *));
+
+:root {
+  --background: #ffffff;
+  --foreground: #1c1c1e;
+  --surface: #ffffff;
+  --surface-border: rgba(0, 0, 0, 0.08);
+  --muted: #6b7280;
+  --accent: #e23744;
+  --accent-2: #ff7a59;
+  --glass-bg: rgba(255, 255, 255, 0.85);
+  --glass-border: rgba(0, 0, 0, 0.06);
+}
+
+.dark {
+  --background: #121014;
+  --foreground: #f5f3f4;
+  --surface: #1c1a1f;
+  --surface-border: rgba(255, 255, 255, 0.08);
+  --muted: #a39ea3;
+  --accent: #ff4b5c;
+  --accent-2: #ff8a65;
+  --glass-bg: rgba(28, 26, 31, 0.8);
+  --glass-border: rgba(255, 255, 255, 0.08);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-surface: var(--surface);
+  --color-surface-border: var(--surface-border);
+  --color-muted: var(--muted);
+  --color-accent: var(--accent);
+  --color-accent-2: var(--accent-2);
+  --font-sans: var(--font-inter);
+  --font-display: var(--font-sora);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans), Arial, Helvetica, sans-serif;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+@layer utilities {
+  .font-display {
+    font-family: var(--font-display), var(--font-sans), sans-serif;
+  }
+
+  .glass {
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+  }
+
+  .card-flat {
+    background: var(--surface);
+    border: 1px solid var(--surface-border);
+  }
+
+  .text-gradient {
+    background: linear-gradient(120deg, var(--accent), var(--accent-2));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  .bg-radial-glow {
+    background-image:
+      radial-gradient(50% 40% at 15% 10%, color-mix(in srgb, var(--accent) 14%, transparent), transparent),
+      radial-gradient(45% 35% at 85% 0%, color-mix(in srgb, var(--accent-2) 12%, transparent), transparent);
+  }
+
+  .animate-float {
+    animation: float 6s ease-in-out infinite;
+  }
+
+  .animate-float-slow {
+    animation: float 9s ease-in-out infinite;
+  }
+}
+
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-16px);
+  }
+}
