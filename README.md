@@ -73,7 +73,7 @@ npm run dev:mobile
 Find your PC's local IP (`ipconfig` on Windows, `ifconfig` on macOS/Linux),
 e.g. `192.168.1.5`, and open `http://192.168.1.5:3000` on your phone. Allow
 Node through the Windows firewall if prompted. `next.config.ts` already
-allows `192.168.x.x` and `10.x.x.x` origins; add yours to
+allows `192.168.x.x`, `10.x.x.x`, `172.x.x.x` and `100.x.x.x` origins; add yours to
 `allowedDevOrigins` if your network uses a different range.
 
 Limitations: Google sign-in will likely fail (Firebase only authorizes
