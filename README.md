@@ -62,6 +62,36 @@ Open [http://localhost:3000](http://localhost:3000).
 - You'll land on `/order/[id]` — the order is saved in Firestore under the
   `orders` collection, scoped to your account.
 
+## 5. Test on your mobile
+
+### Quick look over Wi-Fi (same network as your PC)
+
+```bash
+npm run dev:mobile
+```
+
+Find your PC's local IP (`ipconfig` on Windows, `ifconfig` on macOS/Linux),
+e.g. `192.168.1.5`, and open `http://192.168.1.5:3000` on your phone. Allow
+Node through the Windows firewall if prompted. `next.config.ts` already
+allows `192.168.x.x` and `10.x.x.x` origins; add yours to
+`allowedDevOrigins` if your network uses a different range.
+
+Limitations: Google sign-in will likely fail (Firebase only authorizes
+`localhost` and domains you add), and "Use my current location" needs HTTPS.
+
+### Full test with sign-in and location (HTTPS)
+
+- **Vercel (recommended):** import the repo at vercel.com, add the
+  `NEXT_PUBLIC_FIREBASE_*` values from `.env.local` as environment
+  variables, deploy, then add the `*.vercel.app` domain under Firebase
+  **Authentication → Settings → Authorized domains**.
+- **Tunnel:** run `npm run dev` and `npx ngrok http 3000`, open the
+  `https://…ngrok-free.app` URL on your phone, and add that domain to
+  Firebase Authorized domains (it changes on each restart of the free tier).
+
+Tip: use **Add to Home Screen** in Chrome/Safari — the app ships a web
+manifest and icons, so it opens full-screen like an installed app.
+
 ## Project structure
 
 ```
