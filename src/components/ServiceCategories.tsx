@@ -1,58 +1,45 @@
-"use client";
-
-import { motion } from "framer-motion";
 import Link from "next/link";
+import { ChevronRight } from "lucide-react";
 import { categories } from "@/data/categories";
 
 export default function ServiceCategories() {
   return (
-    <section id="services" className="px-4 py-20">
-      <div className="mx-auto max-w-6xl">
-        <div className="mx-auto max-w-xl text-center">
-          <p className="text-sm font-semibold uppercase tracking-wide text-accent">
-            What you can order
-          </p>
-          <h2 className="font-display mt-2 text-3xl font-bold tracking-tight sm:text-4xl">
-            One app, every local service
-          </h2>
-          <p className="mt-3 text-muted">
-            Mix and match from six categories into a single cart, checkout
-            once, and let every store know exactly what to prepare.
-          </p>
-        </div>
-
-        <div className="mt-12 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-          {categories.map((category, index) => (
-            <motion.div
-              key={category.title}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5, delay: index * 0.06 }}
-            >
-              <Link
-                href={`/services/${category.slug}`}
-                className="card-flat group relative block overflow-hidden rounded-2xl p-6 text-left shadow-sm transition-all hover:-translate-y-1 hover:shadow-md hover:border-accent/30"
-              >
-                <div
-                  className={`flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br ${category.gradient} text-xl text-white shadow-md`}
-                >
-                  {category.emoji}
-                </div>
-                <h3 className="font-display mt-4 text-lg font-semibold">
-                  {category.title}
-                </h3>
-                <p className="mt-1 text-sm text-muted">
-                  {category.description}
-                </p>
-                <div className="mt-4 flex items-center gap-1 text-sm font-semibold text-accent opacity-0 transition-opacity group-hover:opacity-100">
-                  Browse now →
-                </div>
-              </Link>
-            </motion.div>
-          ))}
-        </div>
+    <section id="services" className="container-page py-16">
+      <div className="max-w-xl">
+        <h2 className="text-2xl font-semibold tracking-tight">Services</h2>
+        <p className="mt-2 text-muted">
+          Add items from any category to the same cart. Each store is notified
+          of exactly what to prepare.
+        </p>
       </div>
+
+      <ul className="mt-8 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        {categories.map((category) => (
+          <li key={category.slug}>
+            <Link
+              href={`/services/${category.slug}`}
+              className="panel group flex h-full items-start gap-4 p-5 transition-colors hover:border-accent/40 hover:bg-subtle/40"
+            >
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-accent-soft text-accent-ink">
+                <category.icon size={20} aria-hidden="true" />
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="flex items-center justify-between gap-2">
+                  <span className="font-semibold">{category.title}</span>
+                  <ChevronRight
+                    size={16}
+                    aria-hidden="true"
+                    className="shrink-0 text-muted transition-transform group-hover:translate-x-0.5"
+                  />
+                </span>
+                <span className="mt-1 block text-sm text-muted">
+                  {category.description}
+                </span>
+              </span>
+            </Link>
+          </li>
+        ))}
+      </ul>
     </section>
   );
 }

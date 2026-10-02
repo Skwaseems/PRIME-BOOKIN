@@ -35,7 +35,7 @@ export default function Breadcrumbs({ items }: { items: Crumb[] }) {
                   <ChevronRight size={13} aria-hidden="true" />
                 )}
                 {item.href && !isLast ? (
-                  <Link href={item.href} className="hover:text-foreground">
+                  <Link href={item.href} className="hover:text-foreground hover:underline underline-offset-4">
                     {item.label}
                   </Link>
                 ) : (

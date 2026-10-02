@@ -38,6 +38,8 @@ type CartContextValue = {
   removeItem: (id: string) => void;
   updateQuantity: (id: string, quantity: number) => void;
   clearCart: () => void;
+  /** False until the saved cart has been read from localStorage. */
+  hydrated: boolean;
   storeGroups: StoreGroup[];
   itemCount: number;
   subtotal: number;
@@ -49,7 +51,6 @@ type CartContextValue = {
 const CartContext = createContext<CartContextValue | undefined>(undefined);
 
 function loadCart(): CartItem[] {
-  if (typeof window === "undefined") return [];
   try {
     const raw = window.localStorage.getItem(STORAGE_KEY);
     return raw ? (JSON.parse(raw) as CartItem[]) : [];
@@ -59,11 +60,26 @@ function loadCart(): CartItem[] {
 }
 
 export function CartProvider({ children }: { children: ReactNode }) {
-  const [items, setItems] = useState<CartItem[]>(loadCart);
+  // Start empty on both server and client so hydration matches, then load the
+  // saved cart after mount.
+  const [items, setItems] = useState<CartItem[]>([]);
+  const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
+    // Merge rather than replace, in case an item was added before this ran.
+    const saved = loadCart();
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- restoring persisted cart after hydration
+    setItems((current) => [
+      ...saved.filter((s) => !current.some((c) => c.id === s.id)),
+      ...current,
+    ]);
+    setHydrated(true);
+  }, []);
+
+  useEffect(() => {
+    if (!hydrated) return;
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
-  }, [items]);
+  }, [items, hydrated]);
 
   const addItem = (offering: Offering, quantity = 1) => {
     setItems((prev) => {
@@ -141,6 +157,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
         removeItem,
         updateQuantity,
         clearCart,
+        hydrated,
         storeGroups,
         itemCount,
         subtotal,
