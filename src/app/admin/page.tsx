@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { Fragment, useEffect, useMemo, useState } from "react";
 import {
   collection,
   doc,
@@ -10,37 +10,16 @@ import {
   query,
   updateDoc,
 } from "firebase/firestore";
-import {
-  ChevronDown,
-  IndianRupee,
-  Lock,
-  Package,
-  RefreshCcw,
-  Search,
-  Users,
-} from "lucide-react";
+import { ChevronDown, Inbox, Lock, RefreshCcw, Search } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import GoogleIcon from "@/components/GoogleIcon";
+import EmptyState from "@/components/EmptyState";
+import StatusBadge, { paymentLabel, statusLabels } from "@/components/StatusBadge";
 import { useAuth } from "@/context/AuthContext";
 import { db } from "@/lib/firebase";
+import { formatINR } from "@/lib/format";
 import { orderStatuses, type Order, type OrderStatus } from "@/types/order";
-
-const statusStyles: Record<OrderStatus, string> = {
-  placed: "bg-sky-500/10 text-sky-600",
-  confirmed: "bg-amber-500/10 text-amber-600",
-  out_for_delivery: "bg-violet-500/10 text-violet-600",
-  delivered: "bg-emerald-500/10 text-emerald-600",
-  cancelled: "bg-red-500/10 text-red-600",
-};
-
-const statusLabels: Record<OrderStatus, string> = {
-  placed: "Placed",
-  confirmed: "Confirmed",
-  out_for_delivery: "Out for delivery",
-  delivered: "Delivered",
-  cancelled: "Cancelled",
-};
 
 function formatDate(order: Order) {
   if (!order.createdAt) return "Just now";
@@ -71,6 +50,8 @@ export default function AdminPage() {
 
   const [orders, setOrders] = useState<Order[]>([]);
   const [loadingOrders, setLoadingOrders] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
   const [search, setSearch] = useState("");
@@ -99,6 +80,7 @@ export default function AdminPage() {
   const loadOrders = async () => {
     if (!db) return;
     setLoadingOrders(true);
+    setLoadError(null);
     try {
       const snapshot = await getDocs(
         query(collection(db, "orders"), orderBy("createdAt", "desc"))
@@ -106,6 +88,8 @@ export default function AdminPage() {
       setOrders(
         snapshot.docs.map((d) => ({ id: d.id, ...d.data() }) as Order)
       );
+    } catch {
+      setLoadError("Couldn't load orders. Check your connection and try again.");
     } finally {
       setLoadingOrders(false);
     }
@@ -118,10 +102,22 @@ export default function AdminPage() {
 
   const handleStatusChange = async (orderId: string, status: OrderStatus) => {
     if (!db) return;
+    const previous = orders.find((o) => o.id === orderId)?.status;
+    setActionError(null);
     setOrders((prev) =>
       prev.map((o) => (o.id === orderId ? { ...o, status } : o))
     );
-    await updateDoc(doc(db, "orders", orderId), { status });
+    try {
+      await updateDoc(doc(db, "orders", orderId), { status });
+    } catch {
+      // Roll back the optimistic update so the table reflects what's saved.
+      setOrders((prev) =>
+        prev.map((o) =>
+          o.id === orderId && previous ? { ...o, status: previous } : o
+        )
+      );
+      setActionError("Couldn't update the order status. Please try again.");
+    }
   };
 
   const filteredOrders = useMemo(() => {
@@ -151,284 +147,328 @@ export default function AdminPage() {
     return { revenue, totalOrders: orders.length, uniqueUsers, todayCount };
   }, [orders]);
 
+  const hasFilters = search !== "" || statusFilter !== "all" || dateFilter !== "all";
+  const clearFilters = () => {
+    setSearch("");
+    setStatusFilter("all");
+    setDateFilter("all");
+  };
+
   if (authLoading || checkingAccess) {
     return (
-      <>
-        <Navbar />
-        <main className="flex-1 px-4 py-16 text-center text-muted">
-          Loading…
-        </main>
-        <Footer />
-      </>
+      <AdminShell>
+        <div aria-busy="true" aria-live="polite" className="flex flex-col gap-4">
+          <span className="sr-only">Checking access…</span>
+          <div className="h-8 w-48 animate-pulse rounded-md bg-subtle" />
+          <div className="h-24 animate-pulse rounded-lg bg-subtle" />
+          <div className="h-64 animate-pulse rounded-lg bg-subtle" />
+        </div>
+      </AdminShell>
     );
   }
 
   if (!user) {
     return (
-      <>
-        <Navbar />
-        <main className="flex-1 px-4 py-16">
-          <div className="card-flat mx-auto flex max-w-md flex-col items-center gap-4 rounded-2xl p-10 text-center shadow-sm">
-            <Lock size={32} className="text-accent" />
-            <p className="text-muted">
-              Sign in with the Google account that has admin access.
-            </p>
-            <button
-              onClick={signInWithGoogle}
-              className="flex items-center gap-2 rounded-full bg-accent px-5 py-2.5 text-sm font-semibold text-white hover:bg-accent/90"
-            >
+      <AdminShell>
+        <EmptyState
+          icon={<Lock size={20} />}
+          title="Admin sign-in required"
+          description="Sign in with the Google account that has admin access."
+          action={
+            <button onClick={signInWithGoogle} className="btn btn-primary">
               <GoogleIcon size={16} />
               Continue with Google
             </button>
-          </div>
-        </main>
-        <Footer />
-      </>
+          }
+        />
+      </AdminShell>
     );
   }
 
   if (!isAdmin) {
     return (
-      <>
-        <Navbar />
-        <main className="flex-1 px-4 py-16">
-          <div className="card-flat mx-auto flex max-w-md flex-col items-center gap-3 rounded-2xl p-10 text-center shadow-sm">
-            <Lock size={32} className="text-accent" />
-            <p className="font-semibold">Not authorized</p>
-            <p className="text-sm text-muted">
-              {user.email} isn&apos;t on the admin list for Prime Bookin.
-            </p>
-          </div>
-        </main>
-        <Footer />
-      </>
+      <AdminShell>
+        <EmptyState
+          tone="danger"
+          icon={<Lock size={20} />}
+          title="You don't have access"
+          description={`${user.email} isn't on the admin list for Prime Bookin. Ask an existing admin to add you.`}
+        />
+      </AdminShell>
     );
   }
 
   return (
+    <AdminShell>
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <h1 className="page-title">Orders</h1>
+          <p className="mt-1 text-sm text-muted">
+            Manage incoming orders and update their status.
+          </p>
+        </div>
+        <button
+          onClick={loadOrders}
+          disabled={loadingOrders}
+          className="btn btn-secondary"
+        >
+          <RefreshCcw
+            size={14}
+            aria-hidden="true"
+            className={loadingOrders ? "animate-spin" : ""}
+          />
+          {loadingOrders ? "Refreshing…" : "Refresh"}
+        </button>
+      </div>
+
+      <dl className="mt-6 grid grid-cols-2 gap-px overflow-hidden rounded-lg border border-border bg-border sm:grid-cols-4">
+        <Stat label="Revenue" value={formatINR(stats.revenue)} hint="Excl. cancelled" />
+        <Stat label="Orders" value={String(stats.totalOrders)} />
+        <Stat label="Customers" value={String(stats.uniqueUsers)} />
+        <Stat label="Orders today" value={String(stats.todayCount)} />
+      </dl>
+
+      <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center">
+        <div className="relative flex-1">
+          <Search
+            size={15}
+            aria-hidden="true"
+            className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted"
+          />
+          <input
+            type="search"
+            aria-label="Search orders by customer, email or store"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search customer, email or store"
+            className="input pl-9"
+          />
+        </div>
+        <div className="flex gap-3">
+          <select
+            aria-label="Filter by order status"
+            value={statusFilter}
+            onChange={(e) =>
+              setStatusFilter(e.target.value as OrderStatus | "all")
+            }
+            className="input w-auto flex-1 sm:flex-none"
+          >
+            <option value="all">All statuses</option>
+            {orderStatuses.map((s) => (
+              <option key={s} value={s}>
+                {statusLabels[s]}
+              </option>
+            ))}
+          </select>
+          <select
+            aria-label="Filter by date"
+            value={dateFilter}
+            onChange={(e) => setDateFilter(e.target.value as "all" | "today")}
+            className="input w-auto flex-1 sm:flex-none"
+          >
+            <option value="all">All time</option>
+            <option value="today">Today</option>
+          </select>
+        </div>
+      </div>
+
+      {(loadError || actionError) && (
+        <p role="alert" className="alert-error mt-4">
+          {loadError ?? actionError}
+        </p>
+      )}
+
+      <div className="mt-4">
+        {loadingOrders && orders.length === 0 ? (
+          <div aria-busy="true" className="h-64 animate-pulse rounded-lg bg-subtle" />
+        ) : orders.length === 0 && !loadError ? (
+          <EmptyState
+            icon={<Inbox size={20} />}
+            title="No orders yet"
+            description="New orders will appear here as soon as customers check out."
+          />
+        ) : filteredOrders.length === 0 && orders.length > 0 ? (
+          <EmptyState
+            icon={<Search size={20} />}
+            title="No matching orders"
+            description="Try a different search term or filter."
+            action={
+              hasFilters && (
+                <button onClick={clearFilters} className="btn btn-secondary">
+                  Clear filters
+                </button>
+              )
+            }
+          />
+        ) : filteredOrders.length > 0 ? (
+          <div className="panel overflow-hidden">
+            <p className="border-b border-border px-4 py-2.5 text-xs text-muted">
+              Showing {filteredOrders.length} of {orders.length} orders
+            </p>
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-sm">
+                <thead className="border-b border-border bg-subtle/50 text-xs text-muted">
+                  <tr>
+                    <th scope="col" className="px-4 py-2.5 font-medium">Customer</th>
+                    <th scope="col" className="hidden px-4 py-2.5 font-medium md:table-cell">Stores</th>
+                    <th scope="col" className="hidden px-4 py-2.5 font-medium sm:table-cell">Placed</th>
+                    <th scope="col" className="px-4 py-2.5 text-right font-medium">Total</th>
+                    <th scope="col" className="px-4 py-2.5 font-medium">Status</th>
+                    <th scope="col" className="w-10 px-2 py-2.5">
+                      <span className="sr-only">Details</span>
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border">
+                  {filteredOrders.map((order) => {
+                    const expanded = expandedId === order.id;
+                    return (
+                      <Fragment key={order.id}>
+                        <tr
+                          className={`cursor-pointer hover:bg-subtle/50 ${expanded ? "bg-subtle/50" : ""}`}
+                          onClick={() => setExpandedId(expanded ? null : order.id)}
+                        >
+                          <td className="px-4 py-3 align-top">
+                            <p className="font-medium">{order.userName || "Unknown"}</p>
+                            <p className="max-w-[16rem] truncate text-xs text-muted">
+                              {order.userEmail}
+                            </p>
+                          </td>
+                          <td className="hidden max-w-[16rem] truncate px-4 py-3 align-top text-muted md:table-cell">
+                            {order.storeGroups.map((g) => g.storeName).join(", ")}
+                          </td>
+                          <td className="hidden whitespace-nowrap px-4 py-3 align-top text-muted sm:table-cell">
+                            {formatDate(order)}
+                          </td>
+                          <td className="whitespace-nowrap px-4 py-3 text-right align-top font-medium tabular-nums">
+                            {formatINR(order.grandTotal)}
+                          </td>
+                          <td className="px-4 py-3 align-top">
+                            <StatusBadge status={order.status} />
+                          </td>
+                          <td className="px-2 py-2 align-top">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setExpandedId(expanded ? null : order.id);
+                              }}
+                              aria-expanded={expanded}
+                              aria-controls={`order-${order.id}`}
+                              aria-label={`${expanded ? "Hide" : "Show"} details for ${order.userName || "order"}`}
+                              className="btn btn-icon btn-ghost h-8 w-8"
+                            >
+                              <ChevronDown
+                                size={16}
+                                aria-hidden="true"
+                                className={`transition-transform ${expanded ? "rotate-180" : ""}`}
+                              />
+                            </button>
+                          </td>
+                        </tr>
+                        {expanded && (
+                          <tr id={`order-${order.id}`} className="bg-subtle/30">
+                            <td colSpan={6} className="px-4 py-5">
+                              <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+                                <div className="md:col-span-2">
+                                  <h3 className="eyebrow">Items</h3>
+                                  <ul className="mt-2 flex flex-col gap-1.5">
+                                    {order.items.map((item) => (
+                                      <li key={item.id} className="flex justify-between gap-4">
+                                        <span>
+                                          {item.name}{" "}
+                                          <span className="text-muted">
+                                            × {item.quantity} · {item.storeName}
+                                          </span>
+                                        </span>
+                                        <span className="tabular-nums">
+                                          {formatINR(item.price * item.quantity)}
+                                        </span>
+                                      </li>
+                                    ))}
+                                  </ul>
+                                </div>
+                                <div className="flex flex-col gap-4">
+                                  <div>
+                                    <h3 className="eyebrow">Delivery</h3>
+                                    <p className="mt-2">
+                                      {order.address.line}, {order.address.city}{" "}
+                                      {order.address.pincode}
+                                    </p>
+                                    <p className="text-muted">{order.userPhone}</p>
+                                    <p className="text-muted sm:hidden">{formatDate(order)}</p>
+                                    <p className="mt-1 text-muted">
+                                      {paymentLabel(order.paymentMethod)}
+                                    </p>
+                                  </div>
+                                  <div className="flex flex-col gap-1.5">
+                                    <label
+                                      htmlFor={`status-${order.id}`}
+                                      className="eyebrow"
+                                    >
+                                      Update status
+                                    </label>
+                                    <select
+                                      id={`status-${order.id}`}
+                                      value={order.status}
+                                      onChange={(e) =>
+                                        handleStatusChange(
+                                          order.id,
+                                          e.target.value as OrderStatus
+                                        )
+                                      }
+                                      className="input"
+                                    >
+                                      {orderStatuses.map((s) => (
+                                        <option key={s} value={s}>
+                                          {statusLabels[s]}
+                                        </option>
+                                      ))}
+                                    </select>
+                                  </div>
+                                </div>
+                              </div>
+                            </td>
+                          </tr>
+                        )}
+                      </Fragment>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        ) : null}
+      </div>
+    </AdminShell>
+  );
+}
+
+function AdminShell({ children }: { children: React.ReactNode }) {
+  return (
     <>
       <Navbar />
-      <main className="flex-1 px-4 py-10">
-        <div className="mx-auto max-w-6xl">
-          <div className="flex items-center justify-between">
-            <h1 className="font-display text-3xl font-bold tracking-tight sm:text-4xl">
-              Admin dashboard
-            </h1>
-            <button
-              onClick={loadOrders}
-              disabled={loadingOrders}
-              className="flex items-center gap-2 rounded-full border border-surface-border px-4 py-2 text-sm font-medium hover:bg-surface-border disabled:opacity-60"
-            >
-              <RefreshCcw size={14} className={loadingOrders ? "animate-spin" : ""} />
-              Refresh
-            </button>
-          </div>
-
-          <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-4">
-            <StatCard
-              icon={<IndianRupee size={16} />}
-              label="Revenue"
-              value={`₹${stats.revenue}`}
-            />
-            <StatCard
-              icon={<Package size={16} />}
-              label="Total orders"
-              value={String(stats.totalOrders)}
-            />
-            <StatCard
-              icon={<Users size={16} />}
-              label="Active users"
-              value={String(stats.uniqueUsers)}
-            />
-            <StatCard
-              icon={<Package size={16} />}
-              label="Orders today"
-              value={String(stats.todayCount)}
-            />
-          </div>
-
-          <div className="card-flat mt-6 flex flex-col gap-3 rounded-2xl p-4 shadow-sm sm:flex-row sm:items-center">
-            <div className="flex flex-1 items-center gap-2 rounded-xl border border-surface-border px-3 py-2">
-              <Search size={15} className="text-muted" aria-hidden="true" />
-              <input
-                aria-label="Search orders by customer, email or store"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search customer, email or store…"
-                className="w-full bg-transparent text-sm outline-none"
-              />
-            </div>
-            <select
-              aria-label="Filter by order status"
-              value={statusFilter}
-              onChange={(e) =>
-                setStatusFilter(e.target.value as OrderStatus | "all")
-              }
-              className="rounded-xl border border-surface-border px-3 py-2 text-sm outline-none"
-            >
-              <option value="all">All statuses</option>
-              {orderStatuses.map((s) => (
-                <option key={s} value={s}>
-                  {statusLabels[s]}
-                </option>
-              ))}
-            </select>
-            <select
-              aria-label="Filter by date"
-              value={dateFilter}
-              onChange={(e) => setDateFilter(e.target.value as "all" | "today")}
-              className="rounded-xl border border-surface-border px-3 py-2 text-sm outline-none"
-            >
-              <option value="all">All time</option>
-              <option value="today">Today</option>
-            </select>
-          </div>
-
-          <div className="mt-4 flex flex-col gap-3">
-            {loadingOrders && (
-              <p className="py-8 text-center text-muted">Loading orders…</p>
-            )}
-
-            {!loadingOrders && filteredOrders.length === 0 && (
-              <p className="py-8 text-center text-muted">No orders match.</p>
-            )}
-
-            {!loadingOrders &&
-              filteredOrders.map((order) => (
-                <div
-                  key={order.id}
-                  className="card-flat rounded-2xl p-4 shadow-sm"
-                >
-                  <button
-                    onClick={() =>
-                      setExpandedId(expandedId === order.id ? null : order.id)
-                    }
-                    className="flex w-full flex-col items-start gap-2 text-left sm:flex-row sm:items-center sm:justify-between"
-                  >
-                    <div>
-                      <p className="text-sm font-semibold">
-                        {order.userName || "Unknown"}{" "}
-                        <span className="font-normal text-muted">
-                          · {order.userEmail}
-                        </span>
-                      </p>
-                      <p className="text-xs text-muted">
-                        {order.storeGroups.map((g) => g.storeName).join(", ")}
-                      </p>
-                    </div>
-
-                    <div className="flex items-center gap-3">
-                      <span className="text-xs text-muted">
-                        {formatDate(order)}
-                      </span>
-                      <span className="font-display text-sm font-bold">
-                        ₹{order.grandTotal}
-                      </span>
-                      <span
-                        className={`rounded-full px-2.5 py-1 text-xs font-semibold ${statusStyles[order.status]}`}
-                      >
-                        {statusLabels[order.status]}
-                      </span>
-                      <ChevronDown
-                        size={16}
-                        className={`text-muted transition-transform ${
-                          expandedId === order.id ? "rotate-180" : ""
-                        }`}
-                      />
-                    </div>
-                  </button>
-
-                  {expandedId === order.id && (
-                    <div className="mt-4 grid grid-cols-1 gap-4 border-t border-surface-border pt-4 sm:grid-cols-2">
-                      <div>
-                        <p className="text-xs font-semibold uppercase text-muted">
-                          Items
-                        </p>
-                        <div className="mt-2 flex flex-col gap-1 text-sm">
-                          {order.items.map((item) => (
-                            <div
-                              key={item.id}
-                              className="flex justify-between"
-                            >
-                              <span>
-                                {item.emoji} {item.name} × {item.quantity}
-                              </span>
-                              <span className="text-muted">
-                                ₹{item.price * item.quantity}
-                              </span>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-
-                      <div>
-                        <p className="text-xs font-semibold uppercase text-muted">
-                          Delivery
-                        </p>
-                        <p className="mt-2 text-sm">
-                          {order.address.line}, {order.address.city} —{" "}
-                          {order.address.pincode}
-                        </p>
-                        <p className="text-sm text-muted">
-                          {order.userPhone}
-                        </p>
-                        <p className="mt-2 text-sm">
-                          Payment:{" "}
-                          <span className="font-medium">
-                            {order.paymentMethod === "cod"
-                              ? "Cash on Delivery"
-                              : order.paymentMethod}
-                          </span>
-                        </p>
-
-                        <label className="mt-3 flex items-center gap-2 text-sm">
-                          Status:
-                          <select
-                            value={order.status}
-                            onChange={(e) =>
-                              handleStatusChange(
-                                order.id,
-                                e.target.value as OrderStatus
-                              )
-                            }
-                            className="rounded-lg border border-surface-border px-2 py-1 text-sm outline-none"
-                          >
-                            {orderStatuses.map((s) => (
-                              <option key={s} value={s}>
-                                {statusLabels[s]}
-                              </option>
-                            ))}
-                          </select>
-                        </label>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              ))}
-          </div>
-        </div>
+      <main id="main" className="flex-1 py-8 sm:py-10">
+        <div className="container-page">{children}</div>
       </main>
       <Footer />
     </>
   );
 }
 
-function StatCard({
-  icon,
+function Stat({
   label,
   value,
+  hint,
 }: {
-  icon: React.ReactNode;
   label: string;
   value: string;
+  hint?: string;
 }) {
   return (
-    <div className="card-flat rounded-2xl p-4 shadow-sm">
-      <div className="flex items-center gap-2 text-muted">
-        {icon}
-        <span className="text-xs font-medium">{label}</span>
-      </div>
-      <p className="font-display mt-2 text-2xl font-bold">{value}</p>
+    <div className="bg-surface p-4 sm:p-5">
+      <dt className="text-xs font-medium text-muted">{label}</dt>
+      <dd className="mt-1 text-xl font-semibold tabular-nums sm:text-2xl">{value}</dd>
+      {hint && <dd className="mt-0.5 text-xs text-muted">{hint}</dd>}
     </div>
   );
 }

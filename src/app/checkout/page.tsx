@@ -4,10 +4,13 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { addDoc, collection, serverTimestamp } from "firebase/firestore";
-import { LocateFixed, ShieldCheck } from "lucide-react";
+import { LocateFixed, ShoppingBag } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import GoogleIcon from "@/components/GoogleIcon";
+import EmptyState from "@/components/EmptyState";
+import PriceSummary from "@/components/PriceSummary";
+import { formatINR } from "@/lib/format";
 import { useAuth } from "@/context/AuthContext";
 import { useCart } from "@/context/CartContext";
 import { db } from "@/lib/firebase";
@@ -33,6 +36,7 @@ export default function CheckoutPage() {
     gstTotal,
     grandTotal,
     clearCart,
+    hydrated,
   } = useCart();
 
   const [name, setName] = useState(user?.displayName ?? "");
@@ -48,6 +52,7 @@ export default function CheckoutPage() {
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("cod");
   const [placing, setPlacing] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
+  const [submitted, setSubmitted] = useState(false);
 
   const handleUseLocation = () => {
     if (!navigator.geolocation) {
@@ -75,18 +80,19 @@ export default function CheckoutPage() {
 
   const handlePlaceOrder = async () => {
     setFormError(null);
+    setSubmitted(true);
 
     if (!user) {
       setFormError("Please sign in with Google to place an order.");
       return;
     }
     if (!name || !phone || !addressLine || !city || !pincode) {
-      setFormError("Please fill in your full delivery address.");
+      setFormError("Fill in the highlighted delivery fields to continue.");
       return;
     }
     if (!db) {
       setFormError(
-        "Orders can't be saved yet — Firestore isn't configured for this project."
+        "Orders can't be saved right now. Please try again later."
       );
       return;
     }
@@ -116,27 +122,55 @@ export default function CheckoutPage() {
       clearCart();
       router.push(`/order/${orderRef.id}`);
     } catch {
-      setFormError("Something went wrong placing your order. Please try again.");
+      setFormError("We couldn't place your order. Check your connection and try again.");
     } finally {
       setPlacing(false);
     }
   };
 
+  const fields = [
+    { id: "name", label: "Full name", value: name, set: setName, autoComplete: "name", placeholder: "e.g. Waseem Shaikh" },
+    { id: "phone", label: "Mobile number", value: phone, set: setPhone, autoComplete: "tel", type: "tel", inputMode: "tel", maxLength: 15, placeholder: "e.g. 98765 43210" },
+    { id: "address", label: "House / street / landmark", value: addressLine, set: setAddressLine, autoComplete: "address-line1", placeholder: "e.g. 221B, Wai Road", wide: true },
+    { id: "city", label: "City / town", value: city, set: setCity, autoComplete: "address-level2", placeholder: "e.g. Mahabaleshwar" },
+    { id: "pincode", label: "Pincode", value: pincode, set: setPincode, autoComplete: "postal-code", inputMode: "numeric", maxLength: 6, placeholder: "e.g. 412806" },
+  ] as const;
+
+  if (!hydrated) {
+    return (
+      <>
+        <Navbar />
+        <main id="main" className="flex-1 py-8 sm:py-10">
+          <div className="container-page" aria-busy="true">
+            <span className="sr-only">Loading checkout…</span>
+            <div className="h-8 w-40 animate-pulse rounded-md bg-subtle" />
+            <div className="mt-6 h-96 animate-pulse rounded-lg bg-subtle" />
+          </div>
+        </main>
+        <Footer />
+      </>
+    );
+  }
+
   if (items.length === 0) {
     return (
       <>
         <Navbar />
-        <main className="flex-1 px-4 py-16">
-          <div className="mx-auto max-w-md text-center">
-            <p className="text-muted">
-              Your cart is empty, so there&apos;s nothing to check out yet.
-            </p>
-            <Link
-              href="/#services"
-              className="mt-4 inline-block rounded-full bg-accent px-5 py-2.5 text-sm font-semibold text-white hover:bg-accent/90"
-            >
-              Browse services
-            </Link>
+        <main id="main" className="flex-1 py-8 sm:py-10">
+          <div className="container-page">
+            <h1 className="page-title">Checkout</h1>
+            <div className="mt-8">
+              <EmptyState
+                icon={<ShoppingBag size={20} />}
+                title="Nothing to check out"
+                description="Your cart is empty. Add items from any service first."
+                action={
+                  <Link href="/#services" className="btn btn-primary">
+                    Browse services
+                  </Link>
+                }
+              />
+            </div>
           </div>
         </main>
         <Footer />
@@ -147,206 +181,192 @@ export default function CheckoutPage() {
   return (
     <>
       <Navbar />
-      <main className="flex-1 px-4 py-10">
-        <div className="mx-auto max-w-4xl">
-          <h1 className="font-display text-3xl font-bold tracking-tight sm:text-4xl">
-            Checkout
-          </h1>
+      <main id="main" className="flex-1 py-8 sm:py-10">
+        <div className="container-page">
+          <Link href="/cart" className="text-sm text-muted hover:text-foreground">
+            ← Back to cart
+          </Link>
+          <h1 className="page-title mt-2">Checkout</h1>
 
           {!user && (
-            <div className="card-flat mt-6 flex flex-col items-start gap-3 rounded-2xl p-5 shadow-sm sm:flex-row sm:items-center sm:justify-between">
-              <p className="text-sm text-muted">
-                Sign in with Google to place this order.
+            <div className="panel mt-6 flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
+              <p className="text-sm">
+                <span className="font-medium">Sign in to place your order.</span>{" "}
+                <span className="text-muted">
+                  Your order is saved to your Google account.
+                </span>
               </p>
-              <button
-                onClick={signInWithGoogle}
-                className="flex items-center gap-2 rounded-full bg-accent px-4 py-2 text-sm font-semibold text-white hover:bg-accent/90"
-              >
+              <button onClick={signInWithGoogle} className="btn btn-secondary">
                 <GoogleIcon size={16} />
                 Continue with Google
               </button>
             </div>
           )}
 
-          <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-3">
-            <div className="flex flex-col gap-5 lg:col-span-2">
-              <div className="card-flat rounded-2xl p-5 shadow-sm">
-                <h2 className="font-display text-lg font-semibold">
+          <div className="mt-6 grid grid-cols-1 items-start gap-6 lg:grid-cols-3">
+            <div className="flex flex-col gap-6 lg:col-span-2">
+              <section aria-labelledby="address-title" className="panel p-5 sm:p-6">
+                <h2 id="address-title" className="section-title">
                   Delivery address
                 </h2>
 
-                <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
-                  <div className="flex flex-col gap-1">
-                    <label htmlFor="checkout-name" className="text-xs font-medium text-muted">
-                      Full name
-                    </label>
-                    <input
-                      id="checkout-name"
-                      autoComplete="name"
-                      value={name}
-                      onChange={(e) => setName(e.target.value)}
-                      placeholder="e.g. Waseem Shaikh"
-                      className="rounded-xl border border-surface-border bg-background px-4 py-2.5 text-sm outline-none focus:border-accent"
-                    />
-                  </div>
-                  <div className="flex flex-col gap-1">
-                    <label htmlFor="checkout-phone" className="text-xs font-medium text-muted">
-                      Mobile number
-                    </label>
-                    <input
-                      id="checkout-phone"
-                      type="tel"
-                      autoComplete="tel"
-                      value={phone}
-                      onChange={(e) => setPhone(e.target.value)}
-                      placeholder="e.g. 98765 43210"
-                      className="rounded-xl border border-surface-border bg-background px-4 py-2.5 text-sm outline-none focus:border-accent"
-                    />
-                  </div>
-                  <div className="flex flex-col gap-1 sm:col-span-2">
-                    <label htmlFor="checkout-address" className="text-xs font-medium text-muted">
-                      House / Street / Landmark
-                    </label>
-                    <input
-                      id="checkout-address"
-                      autoComplete="address-line1"
-                      value={addressLine}
-                      onChange={(e) => setAddressLine(e.target.value)}
-                      placeholder="e.g. 221B, Wai Road"
-                      className="rounded-xl border border-surface-border bg-background px-4 py-2.5 text-sm outline-none focus:border-accent"
-                    />
-                  </div>
-                  <div className="flex flex-col gap-1">
-                    <label htmlFor="checkout-city" className="text-xs font-medium text-muted">
-                      City / Town
-                    </label>
-                    <input
-                      id="checkout-city"
-                      autoComplete="address-level2"
-                      value={city}
-                      onChange={(e) => setCity(e.target.value)}
-                      placeholder="e.g. Mahabaleshwar"
-                      className="rounded-xl border border-surface-border bg-background px-4 py-2.5 text-sm outline-none focus:border-accent"
-                    />
-                  </div>
-                  <div className="flex flex-col gap-1">
-                    <label htmlFor="checkout-pincode" className="text-xs font-medium text-muted">
-                      Pincode
-                    </label>
-                    <input
-                      id="checkout-pincode"
-                      inputMode="numeric"
-                      autoComplete="postal-code"
-                      value={pincode}
-                      onChange={(e) => setPincode(e.target.value)}
-                      placeholder="e.g. 412806"
-                      className="rounded-xl border border-surface-border bg-background px-4 py-2.5 text-sm outline-none focus:border-accent"
-                    />
-                  </div>
-                </div>
-
-                <button
-                  onClick={handleUseLocation}
-                  disabled={locating}
-                  className="mt-3 flex items-center gap-2 text-sm font-semibold text-accent disabled:opacity-60"
-                >
-                  <LocateFixed size={16} />
-                  {locating ? "Locating…" : "Use my current location"}
-                </button>
-                {locationError && (
-                  <p className="mt-1 text-xs text-red-500">{locationError}</p>
-                )}
-
-                {coords && (
-                  <div className="mt-3 overflow-hidden rounded-xl border border-surface-border">
-                    <iframe
-                      title="Delivery location preview"
-                      src={`https://maps.google.com/maps?q=${coords.lat},${coords.lng}&z=15&output=embed`}
-                      className="h-48 w-full"
-                      loading="lazy"
-                    />
-                  </div>
-                )}
-              </div>
-
-              <div className="card-flat rounded-2xl p-5 shadow-sm">
-                <h2 className="font-display text-lg font-semibold">
-                  Payment method
-                </h2>
-                <div className="mt-4 flex flex-col gap-2">
-                  {paymentOptions.map((option) => (
-                    <label
-                      key={option.id}
-                      className={`flex items-center justify-between rounded-xl border px-4 py-3 text-sm ${
-                        option.enabled
-                          ? "cursor-pointer border-surface-border"
-                          : "cursor-not-allowed border-surface-border opacity-50"
-                      } ${
-                        paymentMethod === option.id
-                          ? "border-accent bg-accent/5"
-                          : ""
-                      }`}
-                    >
-                      <span className="flex items-center gap-2">
+                <div className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  {fields.map((field) => {
+                    const invalid = submitted && !field.value.trim();
+                    return (
+                      <div
+                        key={field.id}
+                        className={`flex flex-col gap-1.5 ${"wide" in field ? "sm:col-span-2" : ""}`}
+                      >
+                        <label htmlFor={`checkout-${field.id}`} className="field-label">
+                          {field.label}
+                        </label>
                         <input
-                          type="radio"
-                          name="payment"
-                          disabled={!option.enabled}
-                          checked={paymentMethod === option.id}
-                          onChange={() => setPaymentMethod(option.id)}
+                          id={`checkout-${field.id}`}
+                          required
+                          aria-invalid={invalid || undefined}
+                          aria-describedby={invalid ? `checkout-${field.id}-error` : undefined}
+                          type={"type" in field ? field.type : "text"}
+                          inputMode={"inputMode" in field ? field.inputMode : undefined}
+                          maxLength={"maxLength" in field ? field.maxLength : undefined}
+                          autoComplete={field.autoComplete}
+                          value={field.value}
+                          onChange={(e) => field.set(e.target.value)}
+                          placeholder={field.placeholder}
+                          className="input"
                         />
-                        {option.label}
-                      </span>
-                      {!option.enabled && (
-                        <span className="text-xs font-medium text-muted">
-                          Coming soon
-                        </span>
-                      )}
-                    </label>
-                  ))}
+                        {invalid && (
+                          <p id={`checkout-${field.id}-error`} className="text-xs text-danger">
+                            Required
+                          </p>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
-              </div>
+
+                <div className="mt-5 border-t border-border pt-5">
+                  <button
+                    onClick={handleUseLocation}
+                    disabled={locating}
+                    className="btn btn-sm btn-secondary"
+                  >
+                    <LocateFixed size={14} aria-hidden="true" />
+                    {locating ? "Locating…" : "Use my current location"}
+                  </button>
+                  {locationError && (
+                    <p role="alert" className="mt-2 text-sm text-danger">
+                      {locationError}
+                    </p>
+                  )}
+
+                  {coords && (
+                    <div className="mt-3 overflow-hidden rounded-md border border-border">
+                      <iframe
+                        title="Delivery location preview"
+                        src={`https://maps.google.com/maps?q=${coords.lat},${coords.lng}&z=15&output=embed`}
+                        className="h-48 w-full"
+                        loading="lazy"
+                      />
+                    </div>
+                  )}
+                </div>
+              </section>
+
+              <section aria-labelledby="payment-title" className="panel p-5 sm:p-6">
+                <fieldset>
+                  <legend id="payment-title" className="section-title">
+                    Payment method
+                  </legend>
+                  <div className="mt-4 flex flex-col gap-2">
+                    {paymentOptions.map((option) => {
+                      const selected = paymentMethod === option.id;
+                      return (
+                        <label
+                          key={option.id}
+                          className={`flex items-center justify-between gap-3 rounded-md border px-4 py-3 text-sm ${
+                            selected
+                              ? "border-accent bg-accent-soft"
+                              : "border-border"
+                          } ${
+                            option.enabled
+                              ? "cursor-pointer hover:bg-subtle"
+                              : "cursor-not-allowed text-muted"
+                          }`}
+                        >
+                          <span className="flex items-center gap-3">
+                            <input
+                              type="radio"
+                              name="payment"
+                              className="h-4 w-4 accent-[var(--accent)]"
+                              disabled={!option.enabled}
+                              checked={selected}
+                              onChange={() => setPaymentMethod(option.id)}
+                            />
+                            <span className={selected ? "font-medium" : ""}>
+                              {option.label}
+                            </span>
+                          </span>
+                          {!option.enabled && (
+                            <span className="badge bg-subtle text-muted">
+                              Coming soon
+                            </span>
+                          )}
+                        </label>
+                      );
+                    })}
+                  </div>
+                </fieldset>
+              </section>
             </div>
 
-            <div className="card-flat h-fit rounded-2xl p-5 shadow-sm">
-              <h2 className="font-display text-lg font-semibold">
+            <aside
+              aria-labelledby="checkout-summary-title"
+              className="panel p-5 lg:sticky lg:top-24"
+            >
+              <h2 id="checkout-summary-title" className="section-title">
                 Order summary
               </h2>
-              <div className="mt-4 flex flex-col gap-2 text-sm">
-                <div className="flex justify-between text-muted">
-                  <span>Subtotal</span>
-                  <span>₹{subtotal}</span>
-                </div>
-                <div className="flex justify-between text-muted">
-                  <span>Delivery</span>
-                  <span>₹{deliveryTotal}</span>
-                </div>
-                <div className="flex justify-between text-muted">
-                  <span>GST (5%)</span>
-                  <span>₹{gstTotal}</span>
-                </div>
-                <div className="mt-2 flex justify-between border-t border-surface-border pt-3 text-base font-bold">
-                  <span>Grand total</span>
-                  <span>₹{grandTotal}</span>
-                </div>
+              <ul className="mt-4 flex flex-col gap-2 border-b border-border pb-4 text-sm">
+                {items.map((item) => (
+                  <li key={item.id} className="flex justify-between gap-3">
+                    <span className="min-w-0 truncate">
+                      {item.name}{" "}
+                      <span className="text-muted">× {item.quantity}</span>
+                    </span>
+                    <span className="tabular-nums">
+                      {formatINR(item.price * item.quantity)}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+              <div className="mt-4">
+                <PriceSummary
+                  subtotal={subtotal}
+                  deliveryTotal={deliveryTotal}
+                  storeCount={storeGroups.length}
+                  gstTotal={gstTotal}
+                  grandTotal={grandTotal}
+                />
               </div>
 
               {formError && (
-                <p className="mt-3 text-sm text-red-500">{formError}</p>
+                <p role="alert" className="alert-error mt-4">
+                  {formError}
+                </p>
               )}
 
               <button
                 onClick={handlePlaceOrder}
                 disabled={placing}
-                className="mt-5 w-full rounded-full bg-accent py-3 text-sm font-semibold text-white shadow-sm shadow-accent/30 hover:bg-accent/90 disabled:opacity-60"
+                className="btn btn-lg btn-primary mt-5 w-full"
               >
-                {placing ? "Placing order…" : "Place order"}
+                {placing ? "Placing order…" : `Place order · ${formatINR(grandTotal)}`}
               </button>
-              <p className="mt-3 flex items-center gap-1.5 text-xs text-muted">
-                <ShieldCheck size={13} />
-                Your order is saved securely to your account.
+              <p className="mt-3 text-center text-xs text-muted">
+                Pay in cash when your order arrives.
               </p>
-            </div>
+            </aside>
           </div>
         </div>
       </main>

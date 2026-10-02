@@ -1,12 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { LogOut, Menu, ShoppingCart, X } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { useCart } from "@/context/CartContext";
 import ThemeToggle from "@/components/ThemeToggle";
 import GoogleIcon from "@/components/GoogleIcon";
+import Wordmark from "@/components/Wordmark";
 
 const navLinks = [
   { label: "Services", href: "/#services" },
@@ -17,38 +19,66 @@ const navLinks = [
 export default function Navbar() {
   const { user, loading, signInWithGoogle, signOutUser } = useAuth();
   const { itemCount } = useCart();
+  const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
-  const [menuOpenProfile, setMenuOpenProfile] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
+  const profileRef = useRef<HTMLDivElement>(null);
+
+  // Close the profile menu on outside click or Escape.
+  useEffect(() => {
+    if (!profileOpen) return;
+    const onPointer = (e: PointerEvent) => {
+      if (!profileRef.current?.contains(e.target as Node)) setProfileOpen(false);
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setProfileOpen(false);
+    };
+    document.addEventListener("pointerdown", onPointer);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("pointerdown", onPointer);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [profileOpen]);
+
+  const cartLabel =
+    itemCount > 0 ? `Cart, ${itemCount} item${itemCount > 1 ? "s" : ""}` : "Cart";
 
   return (
-    <header className="sticky top-0 z-50 w-full px-4 pt-4">
-      <nav className="glass mx-auto flex max-w-6xl items-center justify-between rounded-2xl px-5 py-3 shadow-lg shadow-black/5">
-        <Link href="/" className="font-display text-lg font-bold tracking-tight">
-          Prime<span className="text-gradient">Bookin</span>
-        </Link>
-
-        <div className="hidden items-center gap-8 md:flex">
-          {navLinks.map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              className="text-sm font-medium text-muted transition-colors hover:text-foreground"
-            >
-              {link.label}
-            </Link>
-          ))}
+    <header className="sticky top-0 z-50 border-b border-border bg-surface/95 backdrop-blur supports-[backdrop-filter]:bg-surface/80">
+      <nav
+        aria-label="Main"
+        className="container-page flex h-16 items-center justify-between gap-4"
+      >
+        <div className="flex items-center gap-8">
+          <Link href="/" aria-label="Prime Bookin home">
+            <Wordmark />
+          </Link>
+          <ul className="hidden items-center gap-1 md:flex">
+            {navLinks.map((link) => (
+              <li key={link.href}>
+                <Link href={link.href} className="btn btn-sm btn-ghost">
+                  {link.label}
+                </Link>
+              </li>
+            ))}
+          </ul>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
           <Link
             href="/cart"
-            aria-label="Cart"
-            className="glass relative flex h-10 w-10 items-center justify-center rounded-full text-foreground transition-transform hover:scale-105 active:scale-95"
+            aria-label={cartLabel}
+            aria-current={pathname === "/cart" ? "page" : undefined}
+            className="btn btn-icon btn-ghost relative"
           >
-            <ShoppingCart size={18} />
+            <ShoppingCart size={18} aria-hidden="true" />
             {itemCount > 0 && (
-              <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-accent text-[11px] font-bold text-white">
-                {itemCount}
+              <span
+                aria-hidden="true"
+                className="absolute right-0.5 top-0.5 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-accent px-1 text-[11px] font-semibold tabular-nums text-white"
+              >
+                {itemCount > 99 ? "99+" : itemCount}
               </span>
             )}
           </Link>
@@ -57,50 +87,58 @@ export default function Navbar() {
           {!loading && !user && (
             <button
               onClick={signInWithGoogle}
-              className="flex items-center gap-2 rounded-full bg-accent px-4 py-2 text-sm font-semibold text-white shadow-sm shadow-accent/30 transition-transform hover:scale-[1.03] active:scale-95"
+              aria-label="Sign in with Google"
+              className="btn btn-sm btn-secondary h-9 max-[379px]:w-9 max-[379px]:px-0"
             >
               <GoogleIcon size={16} />
-              <span className="hidden sm:inline">Sign in</span>
+              <span className="max-[379px]:sr-only">Sign in</span>
             </button>
           )}
 
           {user && (
-            <div className="relative">
+            <div className="relative" ref={profileRef}>
               <button
-                onClick={() => setMenuOpenProfile((v) => !v)}
-                className="flex items-center gap-2 rounded-full glass py-1 pl-1 pr-3"
+                onClick={() => setProfileOpen((v) => !v)}
+                aria-haspopup="menu"
+                aria-expanded={profileOpen}
+                aria-label="Account menu"
+                className="flex h-10 items-center gap-2 rounded-md px-1.5 hover:bg-subtle sm:pr-3"
               >
                 {user.photoURL ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
                     src={user.photoURL}
-                    alt={user.displayName ?? "User"}
-                    className="h-8 w-8 rounded-full"
+                    alt=""
+                    className="h-7 w-7 rounded-full"
                     referrerPolicy="no-referrer"
                   />
                 ) : (
-                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-accent text-sm font-semibold text-white">
+                  <span className="flex h-7 w-7 items-center justify-center rounded-full bg-subtle text-xs font-semibold">
                     {user.displayName?.[0] ?? "U"}
-                  </div>
+                  </span>
                 )}
-                <span className="hidden max-w-[100px] truncate text-sm font-medium sm:inline">
+                <span className="hidden max-w-[120px] truncate text-sm font-medium sm:inline">
                   {user.displayName?.split(" ")[0]}
                 </span>
               </button>
 
-              {menuOpenProfile && (
-                <div className="glass absolute right-0 mt-2 w-48 rounded-xl p-2 shadow-xl">
-                  <div className="px-2 py-1.5 text-xs text-muted truncate">
+              {profileOpen && (
+                <div
+                  role="menu"
+                  className="panel absolute right-0 mt-1 w-56 p-1 shadow-lg"
+                >
+                  <div className="truncate px-3 py-2 text-xs text-muted">
                     {user.email}
                   </div>
                   <button
+                    role="menuitem"
                     onClick={() => {
-                      setMenuOpenProfile(false);
+                      setProfileOpen(false);
                       signOutUser();
                     }}
-                    className="flex w-full items-center gap-2 rounded-lg px-2 py-2 text-sm font-medium text-foreground hover:bg-surface-border"
+                    className="flex w-full items-center gap-2 rounded px-3 py-2 text-left text-sm hover:bg-subtle"
                   >
-                    <LogOut size={15} /> Sign out
+                    <LogOut size={15} aria-hidden="true" /> Sign out
                   </button>
                 </div>
               )}
@@ -108,9 +146,11 @@ export default function Navbar() {
           )}
 
           <button
-            className="glass flex h-10 w-10 items-center justify-center rounded-full md:hidden"
+            className="btn btn-icon btn-ghost md:hidden"
             onClick={() => setMenuOpen((v) => !v)}
-            aria-label="Toggle menu"
+            aria-label={menuOpen ? "Close menu" : "Open menu"}
+            aria-expanded={menuOpen}
+            aria-controls="mobile-nav"
           >
             {menuOpen ? <X size={18} /> : <Menu size={18} />}
           </button>
@@ -118,18 +158,22 @@ export default function Navbar() {
       </nav>
 
       {menuOpen && (
-        <div className="glass mx-auto mt-2 flex max-w-6xl flex-col gap-1 rounded-2xl p-3 md:hidden">
+        <ul
+          id="mobile-nav"
+          className="container-page flex flex-col border-t border-border py-2 md:hidden"
+        >
           {navLinks.map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              onClick={() => setMenuOpen(false)}
-              className="rounded-lg px-3 py-2 text-sm font-medium text-muted hover:bg-surface-border hover:text-foreground"
-            >
-              {link.label}
-            </Link>
+            <li key={link.href}>
+              <Link
+                href={link.href}
+                onClick={() => setMenuOpen(false)}
+                className="block rounded-md px-3 py-3 text-sm font-medium hover:bg-subtle"
+              >
+                {link.label}
+              </Link>
+            </li>
           ))}
-        </div>
+        </ul>
       )}
     </header>
   );

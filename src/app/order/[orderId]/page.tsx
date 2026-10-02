@@ -3,10 +3,14 @@
 import { use, useEffect, useState } from "react";
 import Link from "next/link";
 import { doc, getDoc } from "firebase/firestore";
-import { CheckCircle2, XCircle } from "lucide-react";
+import { CheckCircle2, SearchX } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import EmptyState from "@/components/EmptyState";
+import PriceSummary from "@/components/PriceSummary";
+import StatusBadge, { paymentLabel } from "@/components/StatusBadge";
 import { db } from "@/lib/firebase";
+import { formatINR } from "@/lib/format";
 import type { OrderDoc } from "@/types/order";
 
 export default function OrderConfirmationPage({
@@ -17,26 +21,36 @@ export default function OrderConfirmationPage({
   const { orderId } = use(params);
   const [order, setOrder] = useState<OrderDoc | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<{ title: string; detail: string } | null>(
+    null
+  );
 
   useEffect(() => {
     async function fetchOrder() {
       if (!db) {
-        setError("Firestore isn't configured for this project.");
+        setError({
+          title: "Orders are unavailable",
+          detail: "We can't load orders right now. Please try again later.",
+        });
         setLoading(false);
         return;
       }
       try {
         const snapshot = await getDoc(doc(db, "orders", orderId));
         if (!snapshot.exists()) {
-          setError("We couldn't find this order.");
+          setError({
+            title: "Order not found",
+            detail: "Check the link, or place a new order from your cart.",
+          });
         } else {
           setOrder(snapshot.data() as OrderDoc);
         }
       } catch {
-        setError(
-          "Couldn't load this order. You may not have permission to view it."
-        );
+        setError({
+          title: "We couldn't load this order",
+          detail:
+            "Make sure you're signed in with the account that placed it, then try again.",
+        });
       } finally {
         setLoading(false);
       }
@@ -47,95 +61,139 @@ export default function OrderConfirmationPage({
   return (
     <>
       <Navbar />
-      <main className="flex-1 px-4 py-10">
-        <div className="mx-auto max-w-2xl">
-          {loading && <p className="text-center text-muted">Loading order…</p>}
-
-          {!loading && error && (
-            <div className="card-flat flex flex-col items-center gap-3 rounded-2xl p-10 text-center shadow-sm">
-              <XCircle size={36} className="text-accent" />
-              <p className="text-muted">{error}</p>
-              <Link
-                href="/"
-                className="rounded-full bg-accent px-5 py-2.5 text-sm font-semibold text-white hover:bg-accent/90"
-              >
-                Back home
-              </Link>
+      <main id="main" className="flex-1 py-8 sm:py-10">
+        <div className="container-page max-w-3xl">
+          {loading && (
+            <div aria-busy="true" aria-live="polite" className="flex flex-col gap-4">
+              <span className="sr-only">Loading order…</span>
+              <div className="h-8 w-56 animate-pulse rounded-md bg-subtle" />
+              <div className="h-64 animate-pulse rounded-lg bg-subtle" />
             </div>
           )}
 
+          {!loading && error && (
+            <EmptyState
+              tone="danger"
+              icon={<SearchX size={20} />}
+              title={error.title}
+              description={error.detail}
+              action={
+                <Link href="/" className="btn btn-secondary">
+                  Go to home
+                </Link>
+              }
+            />
+          )}
+
           {!loading && order && (
-            <div className="card-flat rounded-2xl p-6 shadow-sm sm:p-8">
-              <div className="flex flex-col items-center text-center">
-                <CheckCircle2 size={44} className="text-emerald-500" />
-                <h1 className="font-display mt-3 text-2xl font-bold">
-                  Order placed!
-                </h1>
-                <p className="mt-1 text-sm text-muted">
-                  Order ID: <span className="font-mono">{orderId}</span>
-                </p>
+            <>
+              <div className="flex items-start gap-3">
+                <CheckCircle2
+                  size={28}
+                  aria-hidden="true"
+                  className="mt-0.5 shrink-0 text-success"
+                />
+                <div>
+                  <h1 className="page-title">Order placed</h1>
+                  <p className="mt-1 text-muted">
+                    Thanks, {order.userName.split(" ")[0]}. Your order has been
+                    sent to {order.storeGroups.length} store
+                    {order.storeGroups.length > 1 ? "s" : ""}.
+                  </p>
+                </div>
               </div>
 
-              <div className="mt-6 flex flex-col gap-4 divide-y divide-surface-border">
+              <dl className="panel mt-6 grid grid-cols-2 gap-x-6 gap-y-4 p-5 text-sm sm:grid-cols-4">
+                <div className="col-span-2 sm:col-span-1">
+                  <dt className="text-muted">Order ID</dt>
+                  <dd className="mt-0.5 break-all font-mono text-xs">{orderId}</dd>
+                </div>
+                <div>
+                  <dt className="text-muted">Status</dt>
+                  <dd className="mt-1">
+                    <StatusBadge status={order.status} />
+                  </dd>
+                </div>
+                <div>
+                  <dt className="text-muted">Payment</dt>
+                  <dd className="mt-0.5 font-medium">
+                    {paymentLabel(order.paymentMethod)}
+                  </dd>
+                </div>
+                <div className="col-span-2 sm:col-span-1">
+                  <dt className="text-muted">Total</dt>
+                  <dd className="mt-0.5 font-medium tabular-nums">
+                    {formatINR(order.grandTotal)}
+                  </dd>
+                </div>
+              </dl>
+
+              <section aria-labelledby="items-title" className="panel mt-4">
+                <h2
+                  id="items-title"
+                  className="section-title border-b border-border px-5 py-3"
+                >
+                  Items
+                </h2>
                 {order.storeGroups.map((group) => (
-                  <div key={group.storeId} className="pt-4 first:pt-0">
-                    <div className="flex justify-between text-sm font-semibold">
-                      <span>{group.storeName}</span>
-                      <span>₹{group.subtotal}</span>
-                    </div>
+                  <div
+                    key={group.storeId}
+                    className="border-b border-border px-5 py-4 last:border-b-0"
+                  >
+                    <p className="eyebrow">{group.storeName}</p>
+                    <ul className="mt-2 flex flex-col gap-1.5 text-sm">
+                      {order.items
+                        .filter((item) => item.storeId === group.storeId)
+                        .map((item) => (
+                          <li key={item.id} className="flex justify-between gap-4">
+                            <span>
+                              {item.name}{" "}
+                              <span className="text-muted">× {item.quantity}</span>
+                            </span>
+                            <span className="tabular-nums">
+                              {formatINR(item.price * item.quantity)}
+                            </span>
+                          </li>
+                        ))}
+                    </ul>
                   </div>
                 ))}
-              </div>
+                <div className="border-t border-border px-5 py-4">
+                  <PriceSummary
+                    subtotal={order.subtotal}
+                    deliveryTotal={order.deliveryTotal}
+                    storeCount={order.storeGroups.length}
+                    gstTotal={order.gstTotal}
+                    grandTotal={order.grandTotal}
+                  />
+                </div>
+              </section>
 
-              <div className="mt-4 flex flex-col gap-2 border-t border-surface-border pt-4 text-sm">
-                <div className="flex justify-between text-muted">
-                  <span>Subtotal</span>
-                  <span>₹{order.subtotal}</span>
-                </div>
-                <div className="flex justify-between text-muted">
-                  <span>Delivery</span>
-                  <span>₹{order.deliveryTotal}</span>
-                </div>
-                <div className="flex justify-between text-muted">
-                  <span>GST</span>
-                  <span>₹{order.gstTotal}</span>
-                </div>
-                <div className="flex justify-between text-base font-bold">
-                  <span>Grand total</span>
-                  <span>₹{order.grandTotal}</span>
-                </div>
-              </div>
-
-              <div className="mt-4 rounded-xl bg-accent/5 p-4 text-sm">
-                <p className="font-semibold">
-                  Delivering to {order.userName}
-                </p>
+              <section aria-labelledby="delivery-title" className="panel mt-4 p-5 text-sm">
+                <h2 id="delivery-title" className="section-title">
+                  Delivery
+                </h2>
+                <p className="mt-2 font-medium">{order.userName}</p>
                 <p className="text-muted">
-                  {order.address.line}, {order.address.city} —{" "}
-                  {order.address.pincode}
+                  {order.address.line}, {order.address.city} {order.address.pincode}
                 </p>
-                <p className="mt-1 text-muted">
-                  Payment:{" "}
-                  <span className="font-medium text-foreground">
-                    {order.paymentMethod === "cod"
-                      ? "Cash on Delivery"
-                      : order.paymentMethod}
-                  </span>
-                </p>
-              </div>
+                <p className="text-muted">{order.userPhone}</p>
+              </section>
 
-              <p className="mt-4 text-center text-xs text-muted">
-                WhatsApp notifications to the store and our team are coming in
-                a later phase — for now, track this order from your account.
+              <p className="mt-4 text-sm text-muted">
+                Keep your order ID for reference. Pay{" "}
+                {formatINR(order.grandTotal)} in cash when your order arrives.
               </p>
 
-              <Link
-                href="/"
-                className="mt-6 block rounded-full bg-accent py-3 text-center text-sm font-semibold text-white hover:bg-accent/90"
-              >
-                Back to home
-              </Link>
-            </div>
+              <div className="mt-6 flex flex-col gap-2 sm:flex-row">
+                <Link href="/#services" className="btn btn-primary">
+                  Continue shopping
+                </Link>
+                <Link href="/" className="btn btn-secondary">
+                  Go to home
+                </Link>
+              </div>
+            </>
           )}
         </div>
       </main>

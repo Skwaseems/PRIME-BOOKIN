@@ -1,10 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowRight, Minus, Plus, ShoppingBag, Trash2 } from "lucide-react";
+import { ArrowRight, ShoppingBag, Trash2 } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import EmptyState from "@/components/EmptyState";
+import PriceSummary from "@/components/PriceSummary";
+import QuantityStepper from "@/components/QuantityStepper";
 import { useCart } from "@/context/CartContext";
+import { formatINR } from "@/lib/format";
 
 export default function CartPage() {
   const {
@@ -16,138 +20,127 @@ export default function CartPage() {
     grandTotal,
     updateQuantity,
     removeItem,
+    hydrated,
   } = useCart();
 
   return (
     <>
       <Navbar />
-      <main className="flex-1 px-4 py-10">
-        <div className="mx-auto max-w-6xl">
-          <h1 className="font-display text-3xl font-bold tracking-tight sm:text-4xl">
-            Your cart
-          </h1>
+      <main id="main" className="flex-1 py-8 sm:py-10">
+        <div className="container-page">
+          <h1 className="page-title">Cart</h1>
+          {itemCount > 0 && (
+            <p className="mt-1 text-muted">
+              {itemCount} item{itemCount > 1 ? "s" : ""} from{" "}
+              {storeGroups.length} store{storeGroups.length > 1 ? "s" : ""}
+            </p>
+          )}
 
-          {itemCount === 0 ? (
-            <div className="card-flat mt-8 flex flex-col items-center gap-4 rounded-2xl p-12 text-center shadow-sm">
-              <ShoppingBag size={40} className="text-muted" />
-              <p className="text-muted">
-                Your cart is empty. Add a cab, a hotel stay, medicines or
-                groceries to get started.
-              </p>
-              <Link
-                href="/#services"
-                className="rounded-full bg-accent px-5 py-2.5 text-sm font-semibold text-white hover:bg-accent/90"
-              >
-                Browse services
-              </Link>
+          {!hydrated ? (
+            <div aria-busy="true" className="mt-8 h-64 animate-pulse rounded-lg bg-subtle">
+              <span className="sr-only">Loading cart…</span>
+            </div>
+          ) : itemCount === 0 ? (
+            <div className="mt-8">
+              <EmptyState
+                icon={<ShoppingBag size={20} />}
+                title="Your cart is empty"
+                description="Add a cab, a hotel stay, medicines or groceries to get started."
+                action={
+                  <Link href="/#services" className="btn btn-primary">
+                    Browse services
+                  </Link>
+                }
+              />
             </div>
           ) : (
-            <div className="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-3">
-              <div className="flex flex-col gap-5 lg:col-span-2">
+            <div className="mt-8 grid grid-cols-1 items-start gap-6 lg:grid-cols-3">
+              <div className="flex flex-col gap-4 lg:col-span-2">
                 {storeGroups.map((group) => (
-                  <div
+                  <section
                     key={group.storeId}
-                    className="card-flat rounded-2xl p-5 shadow-sm"
+                    aria-labelledby={`store-${group.storeId}`}
+                    className="panel"
                   >
-                    <div className="flex items-center justify-between">
-                      <h2 className="font-display text-lg font-semibold">
+                    <header className="flex items-center justify-between gap-4 border-b border-border px-5 py-3">
+                      <h2 id={`store-${group.storeId}`} className="section-title">
                         {group.storeName}
                       </h2>
-                      <span className="text-sm text-muted">
-                        Subtotal ₹{group.subtotal}
+                      <span className="text-sm text-muted tabular-nums">
+                        {formatINR(group.subtotal)}
                       </span>
-                    </div>
+                    </header>
 
-                    <div className="mt-4 flex flex-col divide-y divide-surface-border">
+                    <ul className="divide-y divide-border">
                       {group.items.map((item) => (
-                        <div
+                        <li
                           key={item.id}
-                          className="flex items-center justify-between gap-3 py-3 first:pt-0 last:pb-0"
+                          className="flex flex-wrap items-center gap-x-4 gap-y-3 px-5 py-4"
                         >
-                          <div className="flex items-center gap-3">
-                            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-accent/10 text-lg">
-                              {item.emoji}
-                            </span>
-                            <div>
-                              <p className="text-sm font-semibold">
-                                {item.name}
-                              </p>
-                              <p className="text-xs text-muted">
-                                {item.unit} · ₹{item.price}
-                              </p>
-                            </div>
+                          <span
+                            aria-hidden="true"
+                            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-subtle text-lg"
+                          >
+                            {item.emoji}
+                          </span>
+                          <div className="min-w-0 flex-1">
+                            <p className="font-medium">{item.name}</p>
+                            <p className="text-sm text-muted">
+                              {formatINR(item.price)} / {item.unit}
+                            </p>
                           </div>
 
-                          <div className="flex items-center gap-3">
-                            <div className="flex items-center gap-2 rounded-full border border-surface-border px-1 py-1">
-                              <button
-                                onClick={() =>
-                                  updateQuantity(item.id, item.quantity - 1)
-                                }
-                                aria-label="Decrease quantity"
-                                className="flex h-6 w-6 items-center justify-center rounded-full hover:bg-surface-border"
-                              >
-                                <Minus size={12} />
-                              </button>
-                              <span className="w-4 text-center text-sm font-semibold">
-                                {item.quantity}
-                              </span>
-                              <button
-                                onClick={() =>
-                                  updateQuantity(item.id, item.quantity + 1)
-                                }
-                                aria-label="Increase quantity"
-                                className="flex h-6 w-6 items-center justify-center rounded-full hover:bg-surface-border"
-                              >
-                                <Plus size={12} />
-                              </button>
-                            </div>
+                          <div className="flex w-full items-center justify-between gap-3 sm:w-auto sm:justify-end">
+                            <QuantityStepper
+                              quantity={item.quantity}
+                              onChange={(q) => updateQuantity(item.id, q)}
+                              itemName={item.name}
+                            />
+                            <span className="w-20 text-right font-medium tabular-nums">
+                              {formatINR(item.price * item.quantity)}
+                            </span>
                             <button
                               onClick={() => removeItem(item.id)}
-                              aria-label="Remove item"
-                              className="text-muted hover:text-accent"
+                              aria-label={`Remove ${item.name}`}
+                              className="btn btn-icon btn-ghost h-9 w-9"
                             >
-                              <Trash2 size={16} />
+                              <Trash2 size={16} aria-hidden="true" />
                             </button>
                           </div>
-                        </div>
+                        </li>
                       ))}
-                    </div>
-                  </div>
+                    </ul>
+                  </section>
                 ))}
               </div>
 
-              <div className="card-flat h-fit rounded-2xl p-5 shadow-sm">
-                <h2 className="font-display text-lg font-semibold">
+              <aside
+                aria-labelledby="summary-title"
+                className="panel p-5 lg:sticky lg:top-24"
+              >
+                <h2 id="summary-title" className="section-title">
                   Order summary
                 </h2>
-                <div className="mt-4 flex flex-col gap-2 text-sm">
-                  <div className="flex justify-between text-muted">
-                    <span>Subtotal</span>
-                    <span>₹{subtotal}</span>
-                  </div>
-                  <div className="flex justify-between text-muted">
-                    <span>Delivery ({storeGroups.length} store{storeGroups.length > 1 ? "s" : ""})</span>
-                    <span>₹{deliveryTotal}</span>
-                  </div>
-                  <div className="flex justify-between text-muted">
-                    <span>GST (5%)</span>
-                    <span>₹{gstTotal}</span>
-                  </div>
-                  <div className="mt-2 flex justify-between border-t border-surface-border pt-3 text-base font-bold">
-                    <span>Grand total</span>
-                    <span>₹{grandTotal}</span>
-                  </div>
+                <div className="mt-4">
+                  <PriceSummary
+                    subtotal={subtotal}
+                    deliveryTotal={deliveryTotal}
+                    storeCount={storeGroups.length}
+                    gstTotal={gstTotal}
+                    grandTotal={grandTotal}
+                  />
                 </div>
-
-                <Link
-                  href="/checkout"
-                  className="mt-5 flex items-center justify-center gap-2 rounded-full bg-accent py-3 text-sm font-semibold text-white shadow-sm shadow-accent/30 hover:bg-accent/90"
-                >
-                  Proceed to checkout
-                  <ArrowRight size={16} />
+                <Link href="/checkout" className="btn btn-lg btn-primary mt-5 w-full">
+                  Continue to checkout
+                  <ArrowRight size={16} aria-hidden="true" />
                 </Link>
-              </div>
+                <Link
+                  href="/#services"
+                  className="btn btn-ghost mt-2 w-full"
+                >
+                  Keep shopping
+                </Link>
+              </aside>
             </div>
           )}
         </div>

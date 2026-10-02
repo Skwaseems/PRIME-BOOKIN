@@ -2,47 +2,67 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/*
+ * Design tokens. Every color in the app comes from here so light and dark
+ * themes stay in sync. Text/background pairs are checked against WCAG AA
+ * (4.5:1 for body text).
+ */
 :root {
-  --background: #ffffff;
-  --foreground: #1c1c1e;
+  --background: #f7f7f8;
+  --foreground: #18181b;
   --surface: #ffffff;
-  --surface-border: rgba(0, 0, 0, 0.08);
-  --muted: #6b7280;
-  --accent: #e23744;
-  --accent-2: #ff7a59;
-  --glass-bg: rgba(255, 255, 255, 0.85);
-  --glass-border: rgba(0, 0, 0, 0.06);
+  --subtle: #f1f1f3;
+  --border: #e4e4e7;
+  --muted: #5f5f66;
+  --accent: #c62834; /* button fills; white text = 5.6:1 */
+  --accent-hover: #ad202b;
+  --accent-ink: #c62834; /* accent-colored text on surface */
+  --accent-soft: #fbeaec;
+  --danger: #b91c1c;
+  --danger-soft: #fef2f2;
+  --success: #15803d;
+  --success-soft: #f0fdf4;
 }
 
 .dark {
   --background: #121014;
-  --foreground: #f5f3f4;
+  --foreground: #f4f4f5;
   --surface: #1c1a1f;
-  --surface-border: rgba(255, 255, 255, 0.08);
+  --subtle: #26232a;
+  --border: #2e2b33;
   --muted: #a39ea3;
-  --accent: #ff4b5c;
-  --accent-2: #ff8a65;
-  --glass-bg: rgba(28, 26, 31, 0.8);
-  --glass-border: rgba(255, 255, 255, 0.08);
+  --accent: #cf2e3b; /* white text = 5.1:1 */
+  --accent-hover: #b82533;
+  --accent-ink: #ff7a85;
+  --accent-soft: rgba(255, 122, 133, 0.1);
+  --danger: #f87171;
+  --danger-soft: rgba(248, 113, 113, 0.1);
+  --success: #4ade80;
+  --success-soft: rgba(74, 222, 128, 0.1);
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-surface: var(--surface);
-  --color-surface-border: var(--surface-border);
+  --color-subtle: var(--subtle);
+  --color-border: var(--border);
   --color-muted: var(--muted);
   --color-accent: var(--accent);
-  --color-accent-2: var(--accent-2);
+  --color-accent-hover: var(--accent-hover);
+  --color-accent-ink: var(--accent-ink);
+  --color-accent-soft: var(--accent-soft);
+  --color-danger: var(--danger);
+  --color-danger-soft: var(--danger-soft);
+  --color-success: var(--success);
+  --color-success-soft: var(--success-soft);
   --font-sans: var(--font-inter);
-  --font-display: var(--font-sora);
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-sans), Arial, Helvetica, sans-serif;
-  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 a:focus-visible,
@@ -50,56 +70,98 @@ button:focus-visible,
 input:focus-visible,
 select:focus-visible,
 textarea:focus-visible,
+summary:focus-visible,
 [tabindex]:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
 }
 
-@layer utilities {
-  .font-display {
-    font-family: var(--font-display), var(--font-sans), sans-serif;
-  }
-
-  .glass {
-    background: var(--glass-bg);
-    border: 1px solid var(--glass-border);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-  }
-
-  .card-flat {
-    background: var(--surface);
-    border: 1px solid var(--surface-border);
-  }
-
-  .text-gradient {
-    background: linear-gradient(120deg, var(--accent), var(--accent-2));
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
-  }
-
-  .bg-radial-glow {
-    background-image:
-      radial-gradient(50% 40% at 15% 10%, color-mix(in srgb, var(--accent) 14%, transparent), transparent),
-      radial-gradient(45% 35% at 85% 0%, color-mix(in srgb, var(--accent-2) 12%, transparent), transparent);
-  }
-
-  .animate-float {
-    animation: float 6s ease-in-out infinite;
-  }
-
-  .animate-float-slow {
-    animation: float 9s ease-in-out infinite;
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }
 
-@keyframes float {
-  0%,
-  100% {
-    transform: translateY(0px);
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 5rem;
+}
+
+/*
+ * Shared component classes. Use these instead of re-typing utility strings so
+ * buttons, fields and panels look identical on every screen.
+ */
+@layer components {
+  .container-page {
+    @apply mx-auto w-full max-w-6xl px-4 sm:px-6;
   }
-  50% {
-    transform: translateY(-16px);
+
+  .page-title {
+    @apply text-2xl font-semibold tracking-tight sm:text-3xl;
+  }
+
+  .section-title {
+    @apply text-base font-semibold;
+  }
+
+  .eyebrow {
+    @apply text-xs font-semibold uppercase tracking-wider text-muted;
+  }
+
+  .panel {
+    @apply rounded-lg border border-border bg-surface;
+  }
+
+  .btn {
+    @apply inline-flex h-10 items-center justify-center gap-2 rounded-md px-4 text-sm font-medium whitespace-nowrap transition-colors disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
+  .btn-sm {
+    @apply h-8 px-3;
+  }
+
+  .btn-lg {
+    @apply h-11 px-5;
+  }
+
+  .btn-icon {
+    @apply w-10 px-0;
+  }
+
+  .btn-primary {
+    @apply bg-accent text-white hover:bg-accent-hover;
+  }
+
+  .btn-secondary {
+    @apply border border-border bg-surface text-foreground hover:bg-subtle;
+  }
+
+  .btn-ghost {
+    @apply text-muted hover:bg-subtle hover:text-foreground;
+  }
+
+  .link {
+    @apply font-medium text-accent-ink underline-offset-4 hover:underline;
+  }
+
+  .field-label {
+    @apply text-sm font-medium text-foreground;
+  }
+
+  .input {
+    @apply h-10 w-full rounded-md border border-border bg-surface px-3 text-sm text-foreground placeholder:text-muted/70 focus:border-accent aria-invalid:border-danger;
+  }
+
+  .badge {
+    @apply inline-flex items-center rounded px-2 py-0.5 text-xs font-medium whitespace-nowrap;
+  }
+
+  .alert-error {
+    @apply rounded-md border border-danger/30 bg-danger-soft px-3 py-2 text-sm text-danger;
   }
 }
