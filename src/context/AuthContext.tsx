@@ -35,10 +35,14 @@ function friendlyAuthError(err: unknown): string {
       return "Sign-in was cancelled before it finished. Please try again.";
     case "auth/unauthorized-domain":
       return "This domain isn't authorized for Google sign-in yet. Add it under Firebase Authentication → Settings → Authorized domains.";
+    case "auth/network-request-failed":
+      return "Couldn't reach Google. Check your internet connection and try again.";
+    case "auth/operation-not-supported-in-this-environment":
+      return "Google sign-in needs http://localhost or an https:// address. Open the app via one of those and try again.";
     case "auth/cancelled-popup-request":
       return "";
     default:
-      return NOT_CONFIGURED_MESSAGE;
+      return "Google sign-in failed. Please check your internet connection and try again.";
   }
 }
 
