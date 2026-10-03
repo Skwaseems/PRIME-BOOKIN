@@ -92,8 +92,18 @@ export const partnerImage: MediaImage = {
     "A smiling local shop owner behind the counter checking an order on a phone, ready to pack it.",
 };
 
+/**
+ * Videos are free Pexels clips, self-hosted from /public/media.
+ * Download them with `npm run media:fetch` (sources: scripts/media-sources.json).
+ * Until the files exist, the poster photo is shown instead.
+ */
+export const heroVideo: MediaVideo = {
+  src: "/media/hero.mp4",
+  poster: heroImage,
+};
+
 export const showcaseVideo: MediaVideo = {
-  src: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4",
+  src: "/media/showcase.mp4",
   prompt:
     "Slow cinematic tracking shot along a hill-town main street at golden hour: a taxi pulls up, a cafe owner sets out cups, a pharmacist hands over a paper bag, shoppers pass small grocery and gift shops. Smooth gimbal movement, no cuts, no text.",
   poster: {

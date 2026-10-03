@@ -14,10 +14,16 @@ import type { MediaVideo } from "@/data/media";
 export default function AmbientVideo({
   video,
   label,
+  posterSizes = "100vw",
+  priority = false,
 }: {
   video: MediaVideo;
   /** Accessible name for the video region. */
   label: string;
+  /** `sizes` for the poster image. */
+  posterSizes?: string;
+  /** Load the poster eagerly (above-the-fold videos). */
+  priority?: boolean;
 }) {
   const ref = useRef<HTMLVideoElement>(null);
   const [failed, setFailed] = useState(false);
@@ -28,7 +34,9 @@ export default function AmbientVideo({
   useEffect(() => {
     const el = ref.current;
     if (!el || failed) return;
-    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const reduced = window.matchMedia(
+      "(prefers-reduced-motion: reduce)",
+    ).matches;
     if (reduced) {
       userPaused.current = true;
       return;
@@ -42,7 +50,7 @@ export default function AmbientVideo({
           el.pause();
         }
       },
-      { threshold: 0.25 }
+      { threshold: 0.25 },
     );
     observer.observe(el);
     return () => observer.disconnect();
@@ -62,7 +70,11 @@ export default function AmbientVideo({
 
   return (
     <div role="region" aria-label={label} className="absolute inset-0">
-      <SmartImage image={video.poster} sizes="100vw" />
+      <SmartImage
+        image={video.poster}
+        sizes={posterSizes}
+        priority={priority}
+      />
       {!failed && (
         <video
           ref={ref}
