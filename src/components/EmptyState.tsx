@@ -20,7 +20,7 @@ export default function EmptyState({
   return (
     <div
       role={tone === "danger" ? "alert" : undefined}
-      className="flex flex-col items-center rounded-[14px] border border-dashed border-border-strong bg-surface-2 px-6 py-16 text-center sm:py-20"
+      className="flex flex-col items-center rounded-[var(--radius-card)] border border-dashed border-border-strong bg-surface-2 px-6 py-16 text-center sm:py-20"
     >
       <span
         aria-hidden="true"
@@ -32,7 +32,9 @@ export default function EmptyState({
       >
         {icon}
       </span>
-      <Heading className="display mt-5 text-[22px] leading-tight">{title}</Heading>
+      <Heading className="display mt-5 text-[22px] leading-tight">
+        {title}
+      </Heading>
       {description && (
         <p className="mt-2 max-w-sm text-[15px] text-body">{description}</p>
       )}

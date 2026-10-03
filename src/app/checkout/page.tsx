@@ -295,7 +295,7 @@ export default function CheckoutPage() {
                       return (
                         <label
                           key={option.id}
-                          className={`flex min-h-14 items-center justify-between gap-3 rounded-lg border px-4 text-[15px] transition-colors ${
+                          className={`flex min-h-14 items-center justify-between gap-3 rounded-xl border px-4 text-[15px] transition-colors ${
                             selected
                               ? "border-foreground bg-surface-2"
                               : "border-border"

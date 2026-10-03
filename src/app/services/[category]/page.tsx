@@ -63,11 +63,14 @@ export default async function CategoryPage({
   const stores = Array.from(
     items
       .reduce((groups, item) => {
-        const group = groups.get(item.storeId) ?? { name: item.storeName, items: [] as typeof items };
+        const group = groups.get(item.storeId) ?? {
+          name: item.storeName,
+          items: [] as typeof items,
+        };
         group.items.push(item);
         return groups.set(item.storeId, group);
       }, new Map<string, { name: string; items: typeof items }>())
-      .entries()
+      .entries(),
   );
 
   return (
@@ -83,7 +86,7 @@ export default async function CategoryPage({
             ]}
           />
 
-          <div className="animate-media-in ken-burns relative mt-6 aspect-[16/9] overflow-hidden rounded-[14px] bg-subtle sm:aspect-[21/8]">
+          <div className="animate-media-in ken-burns relative isolate mt-6 flex min-h-[300px] items-end overflow-hidden rounded-[var(--radius-card)] bg-night sm:min-h-[380px]">
             <SmartImage
               image={categoryImages[slug]}
               sizes="(min-width: 1200px) 1136px, 100vw"
@@ -92,32 +95,36 @@ export default async function CategoryPage({
             />
             <div
               aria-hidden="true"
-              className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent"
+              className="absolute inset-0 bg-gradient-to-t from-[#0b1a15]/90 via-[#0b1a15]/40 to-transparent"
             />
-          </div>
-
-          <div className="mt-8 flex flex-wrap items-end justify-between gap-x-6 gap-y-3">
-            <div className="flex min-w-0 items-center gap-4 sm:gap-5">
-              {current && (
-                <span
-                  aria-hidden="true"
-                  className="flex h-14 w-14 shrink-0 items-center justify-center rounded-[14px] bg-accent text-white sm:h-16 sm:w-16"
-                >
-                  <current.icon size={26} strokeWidth={1.75} />
-                </span>
-              )}
-              <div className="min-w-0">
-                <h1 className="page-title">{meta.title}</h1>
-                <p className="mt-2.5 text-base text-body">{meta.subtitle}</p>
+            <div className="relative flex w-full flex-wrap items-end justify-between gap-x-6 gap-y-4 p-5 text-white sm:p-8">
+              <div className="flex min-w-0 items-center gap-4 sm:gap-5">
+                {current && (
+                  <span
+                    aria-hidden="true"
+                    className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-marigold text-[#13201a] sm:h-16 sm:w-16"
+                  >
+                    <current.icon size={26} strokeWidth={1.75} />
+                  </span>
+                )}
+                <div className="min-w-0">
+                  <h1 className="page-title text-white">{meta.title}</h1>
+                  <p className="mt-2.5 text-base text-white/85">
+                    {meta.subtitle}
+                  </p>
+                </div>
               </div>
+              <p className="rounded-full bg-white/15 px-3.5 py-1.5 text-sm font-medium backdrop-blur-sm">
+                {items.length} item{items.length === 1 ? "" : "s"} ·{" "}
+                {stores.length} store{stores.length === 1 ? "" : "s"}
+              </p>
             </div>
-            <p className="text-sm text-muted">
-              {items.length} item{items.length === 1 ? "" : "s"} ·{" "}
-              {stores.length} store{stores.length === 1 ? "" : "s"}
-            </p>
           </div>
 
-          <nav aria-label="Service categories" className="-mx-4 mt-8 overflow-x-auto px-4 pb-1 sm:mx-0 sm:px-0">
+          <nav
+            aria-label="Service categories"
+            className="-mx-4 mt-8 overflow-x-auto px-4 pb-1 sm:mx-0 sm:px-0"
+          >
             <ul className="flex gap-2">
               {categories.map((c) => (
                 <li key={c.slug}>
@@ -157,7 +164,8 @@ export default async function CategoryPage({
           </div>
 
           <p className="mt-5 text-[13px] text-muted">
-            Prices are for the item only. Delivery and GST are added in your cart.
+            Prices are for the item only. Delivery and GST are added in your
+            cart.
           </p>
         </div>
         <CartBar />

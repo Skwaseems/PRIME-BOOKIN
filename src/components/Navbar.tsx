@@ -151,7 +151,7 @@ export default function Navbar() {
                   aria-haspopup="menu"
                   aria-expanded={profileOpen}
                   aria-label="Account menu"
-                  className="flex h-11 cursor-pointer items-center gap-2 rounded-lg px-1.5 transition-colors hover:bg-subtle sm:pr-3"
+                  className="flex h-11 cursor-pointer items-center gap-2 rounded-full px-1.5 transition-colors hover:bg-subtle sm:pr-3"
                 >
                   {user.photoURL ? (
                     // eslint-disable-next-line @next/next/no-img-element
@@ -272,7 +272,7 @@ export default function Navbar() {
                           ? "page"
                           : undefined
                       }
-                      className="flex min-h-12 items-center rounded-[10px] border border-border bg-surface px-3.5 text-sm font-medium aria-[current=page]:border-foreground"
+                      className="flex min-h-12 items-center rounded-full border border-border bg-surface px-4 text-sm font-medium aria-[current=page]:border-foreground"
                     >
                       {category.title}
                     </Link>

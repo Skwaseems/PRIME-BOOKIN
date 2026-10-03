@@ -6,7 +6,7 @@ export default function PartnerCta() {
   return (
     <section id="partner" aria-labelledby="partner-title">
       <div className="container-page py-[clamp(64px,8vw,112px)]">
-        <div className="panel group grid overflow-hidden md:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
+        <div className="group grid overflow-hidden rounded-[var(--radius-card)] bg-marigold-soft md:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
           <div
             data-reveal
             className="media-reveal relative aspect-[16/10] overflow-hidden bg-subtle md:aspect-auto md:min-h-[360px]"
@@ -43,7 +43,10 @@ export default function PartnerCta() {
               >
                 Register your store
               </a>
-              <a href={`mailto:${siteConfig.email}`} className="btn btn-lg btn-secondary">
+              <a
+                href={`mailto:${siteConfig.email}`}
+                className="btn btn-lg btn-secondary"
+              >
                 Email us
               </a>
             </div>

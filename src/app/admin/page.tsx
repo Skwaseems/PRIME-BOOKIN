@@ -223,7 +223,7 @@ export default function AdminPage() {
         </button>
       </div>
 
-      <dl className="mt-6 grid grid-cols-2 gap-px overflow-hidden rounded-[14px] border border-border bg-border sm:grid-cols-4">
+      <dl className="mt-6 grid grid-cols-2 gap-px overflow-hidden rounded-[var(--radius-card)] border border-border bg-border sm:grid-cols-4">
         <Stat label="Revenue" value={formatINR(stats.revenue)} hint="Excl. cancelled" />
         <Stat label="Orders" value={String(stats.totalOrders)} />
         <Stat label="Customers" value={String(stats.uniqueUsers)} />

@@ -15,7 +15,7 @@ export default function QuantityStepper({
   tone?: "outline" | "solid";
 }) {
   const solid = tone === "solid";
-  const button = `flex h-full w-11 cursor-pointer items-center justify-center rounded-lg transition-colors ${
+  const button = `flex h-full w-11 cursor-pointer items-center justify-center rounded-full transition-colors ${
     solid
       ? "text-background hover:bg-background/15"
       : "text-muted hover:bg-subtle hover:text-foreground"
@@ -25,7 +25,7 @@ export default function QuantityStepper({
     <div
       role="group"
       aria-label={`Quantity of ${itemName}`}
-      className={`inline-flex h-11 items-center rounded-lg ${
+      className={`inline-flex h-11 items-center rounded-full ${
         solid
           ? "bg-foreground text-background"
           : "border border-border-strong bg-surface"
@@ -33,7 +33,9 @@ export default function QuantityStepper({
     >
       <button
         onClick={() => onChange(quantity - 1)}
-        aria-label={quantity === 1 ? `Remove ${itemName}` : `Decrease ${itemName}`}
+        aria-label={
+          quantity === 1 ? `Remove ${itemName}` : `Decrease ${itemName}`
+        }
         className={button}
       >
         <Minus size={16} aria-hidden="true" />

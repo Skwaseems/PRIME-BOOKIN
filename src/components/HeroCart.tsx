@@ -15,7 +15,10 @@ const sample = [
 
 const itemCount = sample.reduce((sum, item) => sum + item.quantity, 0);
 const storeCount = new Set(sample.map((item) => item.storeId)).size;
-const subtotal = sample.reduce((sum, item) => sum + item.price * item.quantity, 0);
+const subtotal = sample.reduce(
+  (sum, item) => sum + item.price * item.quantity,
+  0,
+);
 const delivery = storeCount * DELIVERY_CHARGE_PER_STORE;
 const gst = Math.round(subtotal * GST_RATE);
 const total = subtotal + delivery + gst;
@@ -25,8 +28,10 @@ export default function HeroCart() {
     <figure
       aria-label={`Example cart: ${sample
         .map((item) => item.name)
-        .join(", ")} from ${storeCount} local stores, ${formatINR(total)} in total`}
-      className="animate-settle w-full max-w-[420px] overflow-hidden rounded-[14px] border border-border bg-surface shadow-float"
+        .join(
+          ", ",
+        )} from ${storeCount} local stores, ${formatINR(total)} in total`}
+      className="animate-settle w-full max-w-[420px] overflow-hidden rounded-[var(--radius-card)] border border-border bg-surface text-foreground shadow-float"
     >
       <div className="flex items-baseline justify-between border-b border-dashed border-border-strong px-5 py-4 sm:px-6 sm:pt-5">
         <span className="display text-lg tracking-[-0.01em]">Your cart</span>
@@ -76,7 +81,7 @@ export default function HeroCart() {
         </dl>
         <div
           aria-hidden="true"
-          className="mt-4 flex h-[46px] items-center justify-center rounded-lg bg-foreground text-sm font-semibold text-background"
+          className="mt-4 flex h-[46px] items-center justify-center rounded-full bg-foreground text-sm font-semibold text-background"
         >
           Place order · Cash on delivery
         </div>

@@ -3,6 +3,7 @@ import Navbar from "@/components/Navbar";
 import Hero from "@/components/Hero";
 import ServiceCategories from "@/components/ServiceCategories";
 import Showcase from "@/components/Showcase";
+import CategoryRibbon from "@/components/CategoryRibbon";
 import HowItWorks from "@/components/HowItWorks";
 import PartnerCta from "@/components/PartnerCta";
 import Footer from "@/components/Footer";
@@ -39,6 +40,7 @@ export default function Home() {
       <Navbar />
       <main id="main" className="flex-1">
         <Hero />
+        <CategoryRibbon />
         <ServiceCategories />
         <Showcase />
         <HowItWorks />

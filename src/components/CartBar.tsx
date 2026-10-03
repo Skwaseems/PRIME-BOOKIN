@@ -13,7 +13,7 @@ export default function CartBar() {
   return (
     <div className="pointer-events-none sticky bottom-4 z-40 mt-10 sm:bottom-6">
       <div className="container-page">
-        <div className="animate-rise pointer-events-auto flex items-center justify-between gap-4 rounded-xl bg-night py-2.5 pr-2.5 pl-5 text-white shadow-float [animation-duration:.4s] sm:pl-6">
+        <div className="animate-rise pointer-events-auto flex items-center justify-between gap-4 rounded-full bg-night py-2 pr-2 pl-6 text-white shadow-float [animation-duration:.4s] sm:pl-6">
           <p role="status" className="min-w-0 truncate text-[15px]">
             <span className="font-semibold">
               {itemCount} item{itemCount > 1 ? "s" : ""}
