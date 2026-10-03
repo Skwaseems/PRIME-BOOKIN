@@ -159,9 +159,9 @@ export default function AdminPage() {
       <AdminShell>
         <div aria-busy="true" aria-live="polite" className="flex flex-col gap-4">
           <span className="sr-only">Checking access…</span>
-          <div className="h-8 w-48 animate-pulse rounded-md bg-subtle" />
-          <div className="h-24 animate-pulse rounded-lg bg-subtle" />
-          <div className="h-64 animate-pulse rounded-lg bg-subtle" />
+          <div className="skeleton h-10 w-48" />
+          <div className="skeleton h-24" />
+          <div className="skeleton h-64" />
         </div>
       </AdminShell>
     );
@@ -171,7 +171,8 @@ export default function AdminPage() {
     return (
       <AdminShell>
         <EmptyState
-          icon={<Lock size={20} />}
+          icon={<Lock size={22} strokeWidth={1.75} />}
+          headingLevel="h1"
           title="Admin sign-in required"
           description="Sign in with the Google account that has admin access."
           action={
@@ -190,7 +191,8 @@ export default function AdminPage() {
       <AdminShell>
         <EmptyState
           tone="danger"
-          icon={<Lock size={20} />}
+          icon={<Lock size={22} strokeWidth={1.75} />}
+          headingLevel="h1"
           title="You don't have access"
           description={`${user.email} isn't on the admin list for Prime Bookin. Ask an existing admin to add you.`}
         />
@@ -221,7 +223,7 @@ export default function AdminPage() {
         </button>
       </div>
 
-      <dl className="mt-6 grid grid-cols-2 gap-px overflow-hidden rounded-lg border border-border bg-border sm:grid-cols-4">
+      <dl className="mt-6 grid grid-cols-2 gap-px overflow-hidden rounded-[var(--radius-card)] border border-border bg-border sm:grid-cols-4">
         <Stat label="Revenue" value={formatINR(stats.revenue)} hint="Excl. cancelled" />
         <Stat label="Orders" value={String(stats.totalOrders)} />
         <Stat label="Customers" value={String(stats.uniqueUsers)} />
@@ -280,7 +282,7 @@ export default function AdminPage() {
 
       <div className="mt-4">
         {loadingOrders && orders.length === 0 ? (
-          <div aria-busy="true" className="h-64 animate-pulse rounded-lg bg-subtle" />
+          <div aria-busy="true" className="skeleton h-64" />
         ) : orders.length === 0 && !loadError ? (
           <EmptyState
             icon={<Inbox size={20} />}

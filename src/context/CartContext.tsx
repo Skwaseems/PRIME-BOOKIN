@@ -9,6 +9,7 @@ import {
   type ReactNode,
 } from "react";
 import type { Offering } from "@/data/catalog";
+import { DELIVERY_CHARGE_PER_STORE, GST_RATE } from "@/lib/pricing";
 
 export type CartItem = {
   id: string;
@@ -28,8 +29,6 @@ export type StoreGroup = {
   subtotal: number;
 };
 
-const DELIVERY_CHARGE_PER_STORE = 40;
-const GST_RATE = 0.05;
 const STORAGE_KEY = "primebookin.cart";
 
 type CartContextValue = {

@@ -6,21 +6,25 @@ export default function EmptyState({
   description,
   action,
   tone = "neutral",
+  headingLevel = "h2",
 }: {
   icon: ReactNode;
   title: string;
   description?: ReactNode;
   action?: ReactNode;
   tone?: "neutral" | "danger";
+  /** Use "h1" when the empty state is the whole page. */
+  headingLevel?: "h1" | "h2";
 }) {
+  const Heading = headingLevel;
   return (
     <div
       role={tone === "danger" ? "alert" : undefined}
-      className="flex flex-col items-center rounded-lg border border-dashed border-border px-6 py-14 text-center"
+      className="flex flex-col items-center rounded-[var(--radius-card)] border border-dashed border-border-strong bg-surface-2 px-6 py-16 text-center sm:py-20"
     >
       <span
         aria-hidden="true"
-        className={`flex h-10 w-10 items-center justify-center rounded-full ${
+        className={`flex h-14 w-14 items-center justify-center rounded-full ${
           tone === "danger"
             ? "bg-danger-soft text-danger"
             : "bg-subtle text-muted"
@@ -28,11 +32,13 @@ export default function EmptyState({
       >
         {icon}
       </span>
-      <h2 className="mt-4 font-semibold">{title}</h2>
+      <Heading className="display mt-5 text-[22px] leading-tight">
+        {title}
+      </Heading>
       {description && (
-        <p className="mt-1 max-w-sm text-sm text-muted">{description}</p>
+        <p className="mt-2 max-w-sm text-[15px] text-body">{description}</p>
       )}
-      {action && <div className="mt-6">{action}</div>}
+      {action && <div className="mt-7">{action}</div>}
     </div>
   );
 }

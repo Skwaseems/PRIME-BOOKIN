@@ -14,7 +14,7 @@ export default function OpengraphImage() {
           flexDirection: "column",
           alignItems: "center",
           justifyContent: "center",
-          background: "linear-gradient(135deg, #ffffff 0%, #fff1f2 100%)",
+          background: "#F6F4EF",
           fontFamily: "sans-serif",
         }}
       >
@@ -26,7 +26,7 @@ export default function OpengraphImage() {
             width: 120,
             height: 120,
             borderRadius: 28,
-            background: "#E23744",
+            background: "#C62834",
             color: "#ffffff",
             fontSize: 52,
             fontWeight: 700,
@@ -40,7 +40,7 @@ export default function OpengraphImage() {
             display: "flex",
             fontSize: 64,
             fontWeight: 700,
-            color: "#1c1c1e",
+            color: "#17161A",
           }}
         >
           Prime Bookin
@@ -50,7 +50,7 @@ export default function OpengraphImage() {
             display: "flex",
             marginTop: 16,
             fontSize: 30,
-            color: "#6b7280",
+            color: "#5C5A60",
           }}
         >
           Everything local, one cart away

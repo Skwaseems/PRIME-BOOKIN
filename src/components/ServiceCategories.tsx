@@ -1,45 +1,51 @@
-import Link from "next/link";
-import { ChevronRight } from "lucide-react";
 import { categories } from "@/data/categories";
+import { offerings, type ServiceCategorySlug } from "@/data/catalog";
+import { categoryImages } from "@/data/media";
+import ServiceGrid, { type ServiceTile } from "@/components/ServiceGrid";
+import { formatINR } from "@/lib/format";
+
+function lowestPrice(slug: string) {
+  const prices = offerings
+    .filter((o) => o.category === slug)
+    .map((o) => o.price);
+  return prices.length ? Math.min(...prices) : null;
+}
 
 export default function ServiceCategories() {
-  return (
-    <section id="services" className="container-page py-16">
-      <div className="max-w-xl">
-        <h2 className="text-2xl font-semibold tracking-tight">Services</h2>
-        <p className="mt-2 text-muted">
-          Add items from any category to the same cart. Each store is notified
-          of exactly what to prepare.
-        </p>
-      </div>
+  const tiles: ServiceTile[] = categories.map((category) => {
+    const from = lowestPrice(category.slug);
+    return {
+      slug: category.slug,
+      title: category.title,
+      description: category.description,
+      fromLabel: from === null ? null : formatINR(from),
+      image: categoryImages[category.slug as ServiceCategorySlug],
+    };
+  });
 
-      <ul className="mt-8 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-        {categories.map((category) => (
-          <li key={category.slug}>
-            <Link
-              href={`/services/${category.slug}`}
-              className="panel group flex h-full items-start gap-4 p-5 transition-colors hover:border-accent/40 hover:bg-subtle/40"
-            >
-              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-accent-soft text-accent-ink">
-                <category.icon size={20} aria-hidden="true" />
-              </span>
-              <span className="min-w-0 flex-1">
-                <span className="flex items-center justify-between gap-2">
-                  <span className="font-semibold">{category.title}</span>
-                  <ChevronRight
-                    size={16}
-                    aria-hidden="true"
-                    className="shrink-0 text-muted transition-transform group-hover:translate-x-0.5"
-                  />
-                </span>
-                <span className="mt-1 block text-sm text-muted">
-                  {category.description}
-                </span>
-              </span>
-            </Link>
-          </li>
-        ))}
-      </ul>
+  return (
+    <section id="services" aria-labelledby="services-title">
+      <div className="container-page py-[clamp(64px,9vw,120px)]">
+        <div
+          data-reveal
+          className="flex flex-wrap items-end justify-between gap-x-12 gap-y-4"
+        >
+          <div className="max-w-xl">
+            <p className="eyebrow-accent">Services</p>
+            <h2 id="services-title" className="section-heading mt-3.5">
+              Six kinds of local, in the same cart.
+            </h2>
+          </div>
+          <p className="max-w-sm text-base leading-relaxed text-body">
+            Add items from any category to the same cart. Each store is notified
+            of exactly what to prepare.
+          </p>
+        </div>
+
+        <div className="mt-10 sm:mt-12">
+          <ServiceGrid tiles={tiles} />
+        </div>
+      </div>
     </section>
   );
 }
