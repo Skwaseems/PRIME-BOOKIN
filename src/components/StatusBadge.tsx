@@ -25,6 +25,9 @@ export function paymentLabel(method: string) {
 
 export default function StatusBadge({ status }: { status: OrderStatus }) {
   return (
-    <span className={`badge ${statusStyles[status]}`}>{statusLabels[status]}</span>
+    <span className={`badge ${statusStyles[status]}`}>
+      <span aria-hidden="true" className="h-1.5 w-1.5 rounded-full bg-current" />
+      {statusLabels[status]}
+    </span>
   );
 }

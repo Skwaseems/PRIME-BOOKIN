@@ -61,20 +61,21 @@ export default function OrderConfirmationPage({
   return (
     <>
       <Navbar />
-      <main id="main" className="flex-1 py-8 sm:py-10">
+      <main id="main" className="flex-1 pt-10 pb-16 sm:pt-12 sm:pb-24">
         <div className="container-page max-w-3xl">
           {loading && (
             <div aria-busy="true" aria-live="polite" className="flex flex-col gap-4">
               <span className="sr-only">Loading order…</span>
-              <div className="h-8 w-56 animate-pulse rounded-md bg-subtle" />
-              <div className="h-64 animate-pulse rounded-lg bg-subtle" />
+              <div className="skeleton h-12 w-64" />
+              <div className="skeleton h-24" />
+              <div className="skeleton h-64" />
             </div>
           )}
 
           {!loading && error && (
             <EmptyState
               tone="danger"
-              icon={<SearchX size={20} />}
+              icon={<SearchX size={22} strokeWidth={1.75} />}
               title={error.title}
               description={error.detail}
               action={
@@ -87,15 +88,16 @@ export default function OrderConfirmationPage({
 
           {!loading && order && (
             <>
-              <div className="flex items-start gap-3">
-                <CheckCircle2
-                  size={28}
+              <div className="animate-rise flex flex-col items-start gap-5 sm:flex-row sm:items-center">
+                <span
                   aria-hidden="true"
-                  className="mt-0.5 shrink-0 text-success"
-                />
+                  className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-success-soft text-success"
+                >
+                  <CheckCircle2 size={28} strokeWidth={1.75} />
+                </span>
                 <div>
                   <h1 className="page-title">Order placed</h1>
-                  <p className="mt-1 text-muted">
+                  <p className="mt-2.5 text-base text-body">
                     Thanks, {order.userName.split(" ")[0]}. Your order has been
                     sent to {order.storeGroups.length} store
                     {order.storeGroups.length > 1 ? "s" : ""}.
@@ -103,7 +105,7 @@ export default function OrderConfirmationPage({
                 </div>
               </div>
 
-              <dl className="panel mt-6 grid grid-cols-2 gap-x-6 gap-y-4 p-5 text-sm sm:grid-cols-4">
+              <dl className="panel mt-8 grid grid-cols-2 gap-x-6 gap-y-5 p-5 text-sm sm:grid-cols-4 sm:p-6">
                 <div className="col-span-2 sm:col-span-1">
                   <dt className="text-muted">Order ID</dt>
                   <dd className="mt-0.5 break-all font-mono text-xs">{orderId}</dd>
@@ -128,20 +130,20 @@ export default function OrderConfirmationPage({
                 </div>
               </dl>
 
-              <section aria-labelledby="items-title" className="panel mt-4">
+              <section aria-labelledby="items-title" className="panel mt-4 overflow-hidden">
                 <h2
                   id="items-title"
-                  className="section-title border-b border-border px-5 py-3"
+                  className="section-title border-b border-border bg-surface-2 px-5 py-4 sm:px-6"
                 >
                   Items
                 </h2>
                 {order.storeGroups.map((group) => (
                   <div
                     key={group.storeId}
-                    className="border-b border-border px-5 py-4 last:border-b-0"
+                    className="border-b border-border px-5 py-4 last:border-b-0 sm:px-6"
                   >
                     <p className="eyebrow">{group.storeName}</p>
-                    <ul className="mt-2 flex flex-col gap-1.5 text-sm">
+                    <ul className="mt-2.5 flex flex-col gap-2 text-[15px]">
                       {order.items
                         .filter((item) => item.storeId === group.storeId)
                         .map((item) => (
@@ -158,7 +160,7 @@ export default function OrderConfirmationPage({
                     </ul>
                   </div>
                 ))}
-                <div className="border-t border-border px-5 py-4">
+                <div className="border-t border-dashed border-border-strong bg-surface-2 px-5 py-5 sm:px-6">
                   <PriceSummary
                     subtotal={order.subtotal}
                     deliveryTotal={order.deliveryTotal}
@@ -169,27 +171,27 @@ export default function OrderConfirmationPage({
                 </div>
               </section>
 
-              <section aria-labelledby="delivery-title" className="panel mt-4 p-5 text-sm">
+              <section aria-labelledby="delivery-title" className="panel mt-4 p-5 text-[15px] sm:p-6">
                 <h2 id="delivery-title" className="section-title">
                   Delivery
                 </h2>
-                <p className="mt-2 font-medium">{order.userName}</p>
+                <p className="mt-3 font-semibold">{order.userName}</p>
                 <p className="text-muted">
                   {order.address.line}, {order.address.city} {order.address.pincode}
                 </p>
                 <p className="text-muted">{order.userPhone}</p>
               </section>
 
-              <p className="mt-4 text-sm text-muted">
+              <p className="mt-5 text-sm text-muted">
                 Keep your order ID for reference. Pay{" "}
                 {formatINR(order.grandTotal)} in cash when your order arrives.
               </p>
 
-              <div className="mt-6 flex flex-col gap-2 sm:flex-row">
-                <Link href="/#services" className="btn btn-primary">
+              <div className="mt-7 flex flex-col gap-3 sm:flex-row">
+                <Link href="/#services" className="btn btn-lg btn-primary">
                   Continue shopping
                 </Link>
-                <Link href="/" className="btn btn-secondary">
+                <Link href="/" className="btn btn-lg btn-secondary">
                   Go to home
                 </Link>
               </div>

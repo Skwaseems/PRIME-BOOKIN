@@ -3,6 +3,7 @@ import Navbar from "@/components/Navbar";
 import Hero from "@/components/Hero";
 import ServiceCategories from "@/components/ServiceCategories";
 import HowItWorks from "@/components/HowItWorks";
+import PartnerCta from "@/components/PartnerCta";
 import Footer from "@/components/Footer";
 import { siteConfig } from "@/lib/site";
 
@@ -39,6 +40,7 @@ export default function Home() {
         <Hero />
         <ServiceCategories />
         <HowItWorks />
+        <PartnerCta />
       </main>
       <Footer />
     </>

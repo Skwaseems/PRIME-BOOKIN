@@ -4,65 +4,100 @@
 
 /*
  * Design tokens. Every color in the app comes from here so light and dark
- * themes stay in sync. Text/background pairs are checked against WCAG AA
+ * themes stay in sync. Warm paper ground, deep ink text, and the brand red
+ * reserved for actions and the brand mark. Text/background pairs meet WCAG AA
  * (4.5:1 for body text).
  */
 :root {
-  --background: #f7f7f8;
-  --foreground: #18181b;
+  --background: #f6f4ef; /* paper */
+  --foreground: #17161a; /* ink */
   --surface: #ffffff;
-  --subtle: #f1f1f3;
-  --border: #e4e4e7;
-  --muted: #5f5f66;
+  --surface-2: #faf9f6; /* panel headers, summary footers */
+  --subtle: #ece8e0;
+  --border: #e3dfd6;
+  --border-strong: #d9d4c9;
+  --muted: #5c5a60; /* 6.4:1 on paper */
+  --body: #4a484f; /* long-form copy */
+  --faint: #8a8690; /* decorative numerals and arrows only */
   --accent: #c62834; /* button fills; white text = 5.6:1 */
-  --accent-hover: #ad202b;
-  --accent-ink: #c62834; /* accent-colored text on surface */
-  --accent-soft: #fbeaec;
+  --accent-hover: #a9202b;
+  --accent-ink: #b42330; /* accent-colored text on paper/surface */
+  --accent-soft: #f8e7e8;
+  --night: #17161a; /* dark band background */
+  --night-foreground: #edeae4;
+  --night-muted: #b5b1ac;
+  --night-accent: #ff8a93;
+  --night-border: #3a383e;
   --danger: #b91c1c;
-  --danger-soft: #fef2f2;
+  --danger-soft: #fdf1f1;
   --success: #15803d;
   --success-soft: #f0fdf4;
+  --shadow-float: 0 1px 2px rgb(23 22 26 / 0.04), 0 24px 48px -24px rgb(23 22 26 / 0.22);
+  --ease-out: cubic-bezier(0.2, 0.7, 0.2, 1);
 }
 
 .dark {
-  --background: #121014;
-  --foreground: #f4f4f5;
-  --surface: #1c1a1f;
-  --subtle: #26232a;
-  --border: #2e2b33;
-  --muted: #a39ea3;
+  --background: #121115;
+  --foreground: #f2efe9;
+  --surface: #1b1a1f;
+  --surface-2: #201f25;
+  --subtle: #29272e;
+  --border: #2e2c33;
+  --border-strong: #3d3a42;
+  --muted: #a8a4a0;
+  --body: #c4c0ba;
+  --faint: #77737c;
   --accent: #cf2e3b; /* white text = 5.1:1 */
   --accent-hover: #b82533;
-  --accent-ink: #ff7a85;
-  --accent-soft: rgba(255, 122, 133, 0.1);
+  --accent-ink: #ff8a93;
+  --accent-soft: rgba(255, 138, 147, 0.1);
+  --night: #0b0a0d;
+  --night-foreground: #edeae4;
+  --night-muted: #b5b1ac;
+  --night-accent: #ff8a93;
+  --night-border: #2e2c33;
   --danger: #f87171;
   --danger-soft: rgba(248, 113, 113, 0.1);
   --success: #4ade80;
   --success-soft: rgba(74, 222, 128, 0.1);
+  --shadow-float: 0 1px 2px rgb(0 0 0 / 0.3), 0 24px 48px -24px rgb(0 0 0 / 0.6);
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
   --color-subtle: var(--subtle);
   --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
   --color-muted: var(--muted);
+  --color-body: var(--body);
+  --color-faint: var(--faint);
   --color-accent: var(--accent);
   --color-accent-hover: var(--accent-hover);
   --color-accent-ink: var(--accent-ink);
   --color-accent-soft: var(--accent-soft);
+  --color-night: var(--night);
+  --color-night-foreground: var(--night-foreground);
+  --color-night-muted: var(--night-muted);
+  --color-night-accent: var(--night-accent);
+  --color-night-border: var(--night-border);
   --color-danger: var(--danger);
   --color-danger-soft: var(--danger-soft);
   --color-success: var(--success);
   --color-success-soft: var(--success-soft);
-  --font-sans: var(--font-inter);
+  --font-sans: var(--font-geist);
+  --font-display: var(--font-bricolage);
+  --shadow-float: var(--shadow-float);
+  --ease-out-soft: var(--ease-out);
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-sans), Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans), system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
 }
 
 a:focus-visible,
@@ -73,7 +108,7 @@ textarea:focus-visible,
 summary:focus-visible,
 [tabindex]:focus-visible {
   outline: 2px solid var(--accent);
-  outline-offset: 2px;
+  outline-offset: 3px;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -89,7 +124,7 @@ summary:focus-visible,
 
 html {
   scroll-behavior: smooth;
-  scroll-padding-top: 5rem;
+  scroll-padding-top: 5.5rem;
 }
 
 /*
@@ -98,39 +133,66 @@ html {
  */
 @layer components {
   .container-page {
-    @apply mx-auto w-full max-w-6xl px-4 sm:px-6;
+    @apply mx-auto w-full max-w-[1200px] px-4 sm:px-6 lg:px-8;
+  }
+
+  .display {
+    font-family: var(--font-display), var(--font-sans), sans-serif;
+    font-weight: 600;
+    letter-spacing: -0.03em;
   }
 
   .page-title {
-    @apply text-2xl font-semibold tracking-tight sm:text-3xl;
+    font-family: var(--font-display), var(--font-sans), sans-serif;
+    font-weight: 600;
+    @apply text-[2rem] leading-none sm:text-[2.75rem] lg:text-[3.25rem];
+    letter-spacing: -0.035em;
+  }
+
+  .section-heading {
+    font-family: var(--font-display), var(--font-sans), sans-serif;
+    font-weight: 600;
+    letter-spacing: -0.03em;
+    @apply text-[1.875rem] leading-[1.05] text-balance sm:text-[2.25rem] lg:text-[2.75rem];
   }
 
   .section-title {
-    @apply text-base font-semibold;
+    font-family: var(--font-display), var(--font-sans), sans-serif;
+    font-weight: 600;
+    @apply text-base leading-tight sm:text-lg;
+    letter-spacing: -0.01em;
   }
 
   .eyebrow {
-    @apply text-xs font-semibold uppercase tracking-wider text-muted;
+    @apply text-xs font-semibold uppercase tracking-[0.08em] text-muted;
+  }
+
+  .eyebrow-accent {
+    @apply text-[13px] font-semibold uppercase tracking-[0.08em] text-accent-ink;
   }
 
   .panel {
-    @apply rounded-lg border border-border bg-surface;
+    @apply rounded-[14px] border border-border bg-surface;
+  }
+
+  .panel-header {
+    @apply flex items-center justify-between gap-4 border-b border-border bg-surface-2 px-5 py-4 sm:px-6;
   }
 
   .btn {
-    @apply inline-flex h-10 items-center justify-center gap-2 rounded-md px-4 text-sm font-medium whitespace-nowrap transition-colors disabled:cursor-not-allowed disabled:opacity-50;
+    @apply inline-flex h-11 cursor-pointer items-center justify-center gap-2 rounded-lg border border-transparent px-5 text-[15px] font-semibold whitespace-nowrap transition-[background-color,border-color,color,transform] duration-200 ease-(--ease-out) select-none active:translate-y-px disabled:pointer-events-none disabled:opacity-45;
   }
 
   .btn-sm {
-    @apply h-8 px-3;
+    @apply h-10 px-4 text-sm;
   }
 
   .btn-lg {
-    @apply h-11 px-5;
+    @apply h-12 px-[22px];
   }
 
   .btn-icon {
-    @apply w-10 px-0;
+    @apply w-11 px-0;
   }
 
   .btn-primary {
@@ -138,15 +200,40 @@ html {
   }
 
   .btn-secondary {
-    @apply border border-border bg-surface text-foreground hover:bg-subtle;
+    @apply border-border-strong bg-surface text-foreground hover:border-foreground;
+  }
+
+  .btn-dark {
+    @apply bg-foreground text-background hover:opacity-90;
   }
 
   .btn-ghost {
-    @apply text-muted hover:bg-subtle hover:text-foreground;
+    @apply font-medium text-muted hover:bg-subtle hover:text-foreground;
+  }
+
+  /* Arrow icon inside a button nudges forward on hover. */
+  .btn .icon-nudge {
+    @apply transition-transform duration-200 ease-(--ease-out);
+  }
+  .btn:hover .icon-nudge {
+    @apply translate-x-[3px];
   }
 
   .link {
     @apply font-medium text-accent-ink underline-offset-4 hover:underline;
+  }
+
+  /* Text link with an underline that draws in from the left on hover. */
+  .link-draw {
+    @apply relative text-foreground/80 transition-colors hover:text-foreground;
+  }
+  .link-draw::after {
+    content: "";
+    @apply absolute inset-x-0 -bottom-0.5 h-[1.5px] origin-left scale-x-0 bg-current transition-transform duration-300 ease-(--ease-out);
+  }
+  .link-draw:hover::after,
+  .link-draw[aria-current="page"]::after {
+    @apply scale-x-100;
   }
 
   .field-label {
@@ -154,14 +241,87 @@ html {
   }
 
   .input {
-    @apply h-10 w-full rounded-md border border-border bg-surface px-3 text-sm text-foreground placeholder:text-muted/70 focus:border-accent aria-invalid:border-danger;
+    @apply h-[46px] w-full rounded-lg border border-border-strong bg-surface px-3.5 text-[15px] text-foreground transition-[border-color,box-shadow] duration-200 placeholder:text-muted/70 hover:border-muted focus:border-foreground focus:shadow-[0_0_0_3px_rgb(198_40_52/0.16)] focus-visible:outline-none aria-invalid:border-danger;
   }
 
   .badge {
-    @apply inline-flex items-center rounded px-2 py-0.5 text-xs font-medium whitespace-nowrap;
+    @apply inline-flex h-7 items-center gap-1.5 rounded-full px-3 text-[13px] font-semibold whitespace-nowrap;
   }
 
   .alert-error {
-    @apply rounded-md border border-danger/30 bg-danger-soft px-3 py-2 text-sm text-danger;
+    @apply rounded-lg border border-danger/30 bg-danger-soft px-3.5 py-3 text-sm text-danger;
+  }
+
+  .skeleton {
+    @apply animate-pulse rounded-[14px] bg-subtle;
+  }
+}
+
+/* Motion. Entrance animations run once; everything is disabled under
+   prefers-reduced-motion by the global rule above. */
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes settle {
+  from {
+    opacity: 0;
+    transform: translateY(24px) rotate(1.2deg);
+  }
+  to {
+    opacity: 1;
+    transform: rotate(-1deg);
+  }
+}
+
+@keyframes slide-down {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.animate-rise {
+  animation: rise 0.7s var(--ease-out) both;
+}
+
+.animate-settle {
+  animation: settle 0.9s var(--ease-out) 0.25s both;
+}
+
+.animate-slide-down {
+  animation: slide-down 0.3s var(--ease-out) both;
+}
+
+/* Scroll reveal: elements start hidden only once JS has marked the page as
+   able to reveal them, so content is never invisible without JS. */
+.js-reveal [data-reveal] {
+  opacity: 0;
+  transform: translateY(18px);
+  transition:
+    opacity 0.7s var(--ease-out),
+    transform 0.7s var(--ease-out);
+}
+
+.js-reveal [data-reveal].is-revealed {
+  opacity: 1;
+  transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .js-reveal [data-reveal] {
+    opacity: 1;
+    transform: none;
   }
 }

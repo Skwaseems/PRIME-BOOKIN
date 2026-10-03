@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { addDoc, collection, serverTimestamp } from "firebase/firestore";
-import { LocateFixed, ShoppingBag } from "lucide-react";
+import { ArrowLeft, Loader2, LocateFixed, ShoppingBag } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import GoogleIcon from "@/components/GoogleIcon";
@@ -140,11 +140,14 @@ export default function CheckoutPage() {
     return (
       <>
         <Navbar />
-        <main id="main" className="flex-1 py-8 sm:py-10">
+        <main id="main" className="flex-1 pt-10 pb-16 sm:pt-12 sm:pb-24">
           <div className="container-page" aria-busy="true">
             <span className="sr-only">Loading checkout…</span>
-            <div className="h-8 w-40 animate-pulse rounded-md bg-subtle" />
-            <div className="mt-6 h-96 animate-pulse rounded-lg bg-subtle" />
+            <div className="skeleton h-10 w-48" />
+            <div className="mt-8 grid gap-6 lg:grid-cols-3">
+              <div className="skeleton h-96 lg:col-span-2" />
+              <div className="skeleton h-72" />
+            </div>
           </div>
         </main>
         <Footer />
@@ -156,7 +159,7 @@ export default function CheckoutPage() {
     return (
       <>
         <Navbar />
-        <main id="main" className="flex-1 py-8 sm:py-10">
+        <main id="main" className="flex-1 pt-10 pb-16 sm:pt-12 sm:pb-24">
           <div className="container-page">
             <h1 className="page-title">Checkout</h1>
             <div className="mt-8">
@@ -181,17 +184,25 @@ export default function CheckoutPage() {
   return (
     <>
       <Navbar />
-      <main id="main" className="flex-1 py-8 sm:py-10">
+      <main id="main" className="flex-1 pt-10 pb-16 sm:pt-12 sm:pb-24">
         <div className="container-page">
-          <Link href="/cart" className="text-sm text-muted hover:text-foreground">
-            ← Back to cart
+          <Link
+            href="/cart"
+            className="group inline-flex min-h-9 items-center gap-1.5 text-sm font-medium text-muted transition-colors hover:text-foreground"
+          >
+            <ArrowLeft
+              size={15}
+              aria-hidden="true"
+              className="transition-transform duration-200 group-hover:-translate-x-0.5"
+            />
+            Back to cart
           </Link>
-          <h1 className="page-title mt-2">Checkout</h1>
+          <h1 className="page-title mt-3">Checkout</h1>
 
           {!user && (
-            <div className="panel mt-6 flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
-              <p className="text-sm">
-                <span className="font-medium">Sign in to place your order.</span>{" "}
+            <div className="panel mt-8 flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+              <p className="text-[15px]">
+                <span className="font-semibold">Sign in to place your order.</span>{" "}
                 <span className="text-muted">
                   Your order is saved to your Google account.
                 </span>
@@ -203,10 +214,10 @@ export default function CheckoutPage() {
             </div>
           )}
 
-          <div className="mt-6 grid grid-cols-1 items-start gap-6 lg:grid-cols-3">
+          <div className="mt-8 grid grid-cols-1 items-start gap-6 lg:grid-cols-3">
             <div className="flex flex-col gap-6 lg:col-span-2">
-              <section aria-labelledby="address-title" className="panel p-5 sm:p-6">
-                <h2 id="address-title" className="section-title">
+              <section aria-labelledby="address-title" className="panel p-5 sm:p-7">
+                <h2 id="address-title" className="display text-xl leading-tight">
                   Delivery address
                 </h2>
 
@@ -236,7 +247,7 @@ export default function CheckoutPage() {
                           className="input"
                         />
                         {invalid && (
-                          <p id={`checkout-${field.id}-error`} className="text-xs text-danger">
+                          <p id={`checkout-${field.id}-error`} className="text-[13px] text-danger">
                             Required
                           </p>
                         )}
@@ -273,9 +284,9 @@ export default function CheckoutPage() {
                 </div>
               </section>
 
-              <section aria-labelledby="payment-title" className="panel p-5 sm:p-6">
+              <section aria-labelledby="payment-title" className="panel p-5 sm:p-7">
                 <fieldset>
-                  <legend id="payment-title" className="section-title">
+                  <legend id="payment-title" className="display text-xl leading-tight">
                     Payment method
                   </legend>
                   <div className="mt-4 flex flex-col gap-2">
@@ -284,9 +295,9 @@ export default function CheckoutPage() {
                       return (
                         <label
                           key={option.id}
-                          className={`flex items-center justify-between gap-3 rounded-md border px-4 py-3 text-sm ${
+                          className={`flex min-h-14 items-center justify-between gap-3 rounded-lg border px-4 text-[15px] transition-colors ${
                             selected
-                              ? "border-accent bg-accent-soft"
+                              ? "border-foreground bg-surface-2"
                               : "border-border"
                           } ${
                             option.enabled
@@ -298,12 +309,12 @@ export default function CheckoutPage() {
                             <input
                               type="radio"
                               name="payment"
-                              className="h-4 w-4 accent-[var(--accent)]"
+                              className="h-[18px] w-[18px] accent-[var(--accent)]"
                               disabled={!option.enabled}
                               checked={selected}
                               onChange={() => setPaymentMethod(option.id)}
                             />
-                            <span className={selected ? "font-medium" : ""}>
+                            <span className={selected ? "font-semibold" : ""}>
                               {option.label}
                             </span>
                           </span>
@@ -322,12 +333,12 @@ export default function CheckoutPage() {
 
             <aside
               aria-labelledby="checkout-summary-title"
-              className="panel p-5 lg:sticky lg:top-24"
+              className="panel p-5 sm:p-6 lg:sticky lg:top-24"
             >
-              <h2 id="checkout-summary-title" className="section-title">
+              <h2 id="checkout-summary-title" className="display text-xl leading-tight">
                 Order summary
               </h2>
-              <ul className="mt-4 flex flex-col gap-2 border-b border-border pb-4 text-sm">
+              <ul className="mt-5 flex flex-col gap-2.5 border-b border-dashed border-border-strong pb-5 text-[15px]">
                 {items.map((item) => (
                   <li key={item.id} className="flex justify-between gap-3">
                     <span className="min-w-0 truncate">
@@ -340,7 +351,7 @@ export default function CheckoutPage() {
                   </li>
                 ))}
               </ul>
-              <div className="mt-4">
+              <div className="mt-5">
                 <PriceSummary
                   subtotal={subtotal}
                   deliveryTotal={deliveryTotal}
@@ -359,11 +370,15 @@ export default function CheckoutPage() {
               <button
                 onClick={handlePlaceOrder}
                 disabled={placing}
-                className="btn btn-lg btn-primary mt-5 w-full"
+                aria-busy={placing || undefined}
+                className="btn btn-lg btn-primary mt-6 w-full"
               >
+                {placing && (
+                  <Loader2 size={16} aria-hidden="true" className="animate-spin" />
+                )}
                 {placing ? "Placing order…" : `Place order · ${formatINR(grandTotal)}`}
               </button>
-              <p className="mt-3 text-center text-xs text-muted">
+              <p className="mt-3 text-center text-[13px] text-muted">
                 Pay in cash when your order arrives.
               </p>
             </aside>

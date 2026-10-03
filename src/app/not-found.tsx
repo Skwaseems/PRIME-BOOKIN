@@ -13,19 +13,19 @@ export default function NotFound() {
   return (
     <>
       <Navbar />
-      <main id="main" className="flex-1 py-16 sm:py-24">
+      <main id="main" className="flex-1 py-20 sm:py-28">
         <div className="container-page max-w-xl">
-          <p className="eyebrow">Error 404</p>
-          <h1 className="page-title mt-2">Page not found</h1>
-          <p className="mt-2 text-muted">
+          <p className="eyebrow-accent">Error 404</p>
+          <h1 className="page-title mt-3">Page not found</h1>
+          <p className="mt-4 text-base leading-relaxed text-body">
             The page you&apos;re looking for doesn&apos;t exist. It may have
             been moved, or the link may be out of date.
           </p>
-          <Link href="/" className="btn btn-primary mt-6">
+          <Link href="/" className="btn btn-lg btn-primary mt-8">
             Go to home
           </Link>
 
-          <div className="mt-10 border-t border-border pt-6">
+          <div className="mt-12 border-t border-border pt-7">
             <h2 className="eyebrow">Browse a service</h2>
             <ul className="mt-3 flex flex-wrap gap-2">
               {categories.map((category) => (
