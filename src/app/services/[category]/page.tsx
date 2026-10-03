@@ -6,6 +6,8 @@ import Footer from "@/components/Footer";
 import OfferingCard from "@/components/OfferingCard";
 import Breadcrumbs from "@/components/Breadcrumbs";
 import CartBar from "@/components/CartBar";
+import SmartImage from "@/components/SmartImage";
+import { categoryImages } from "@/data/media";
 import { formatINR } from "@/lib/format";
 import { DELIVERY_CHARGE_PER_STORE } from "@/lib/pricing";
 import { categories } from "@/data/categories";
@@ -81,7 +83,20 @@ export default async function CategoryPage({
             ]}
           />
 
-          <div className="mt-7 flex flex-wrap items-end justify-between gap-x-6 gap-y-3">
+          <div className="animate-media-in ken-burns relative mt-6 aspect-[16/9] overflow-hidden rounded-[14px] bg-subtle sm:aspect-[21/8]">
+            <SmartImage
+              image={categoryImages[slug]}
+              sizes="(min-width: 1200px) 1136px, 100vw"
+              priority
+              fallbackLabel={meta.title}
+            />
+            <div
+              aria-hidden="true"
+              className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent"
+            />
+          </div>
+
+          <div className="mt-8 flex flex-wrap items-end justify-between gap-x-6 gap-y-3">
             <div className="flex min-w-0 items-center gap-4 sm:gap-5">
               {current && (
                 <span

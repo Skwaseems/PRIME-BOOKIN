@@ -5,6 +5,8 @@ import { ArrowRight, Check } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import GoogleIcon from "@/components/GoogleIcon";
 import HeroCart from "@/components/HeroCart";
+import SmartImage from "@/components/SmartImage";
+import { heroImage } from "@/data/media";
 
 const promises = [
   "Several stores, one checkout",
@@ -68,8 +70,24 @@ export default function Hero() {
           </ul>
         </div>
 
-        <div className="flex min-w-0 flex-[1_1_360px] justify-center">
-          <HeroCart />
+        <div className="min-w-0 flex-[1_1_360px]">
+          <div className="mx-auto flex w-full max-w-[520px] flex-col">
+            <div className="animate-media-in ken-burns relative ml-auto aspect-[4/5] w-[82%] overflow-hidden rounded-[14px] bg-subtle sm:w-[78%]">
+              <SmartImage
+                image={heroImage}
+                sizes="(min-width: 1024px) 400px, 80vw"
+                priority
+                fallbackLabel="Hero photo"
+              />
+              <div
+                aria-hidden="true"
+                className="absolute inset-0 bg-gradient-to-t from-black/25 via-transparent to-transparent"
+              />
+            </div>
+            <div className="relative -mt-[45%] w-[88%] sm:w-[84%]">
+              <HeroCart />
+            </div>
+          </div>
         </div>
       </div>
     </section>
