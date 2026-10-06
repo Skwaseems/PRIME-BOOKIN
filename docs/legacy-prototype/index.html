@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PRIMEBOOKIN Super App</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <style>
+    .bg-prime-red { background-color: #D32F2F; }
+    .text-prime-red { color: #D32F2F; }
+    .border-prime-red { border-color: #D32F2F; }
+  </style>
+</head>
+<body class="bg-gray-100 font-sans pb-24">
+
+  <!-- Header -->
+  <header class="bg-prime-red text-white p-4 shadow-lg sticky top-0 z-50 flex justify-between items-center">
+    <h1 class="text-2xl font-black tracking-wider">PRIMEBOOKIN</h1>
+    <a href="tel:+917768817510" class="bg-white text-prime-red font-bold px-4 py-1.5 rounded-full text-xs shadow flex items-center gap-1">
+      <i class="fa-solid fa-phone"></i> CALL
+    </a>
+  </header>
+
+  <!-- Navigation Switcher -->
+  <div class="p-4 bg-white shadow-sm">
+    <div class="grid grid-cols-4 gap-2 text-center text-xs font-bold">
+      <button onclick="switchTab('stays')" id="tab-stays" class="top-nav-btn p-2 rounded-xl bg-prime-red text-white shadow">
+        <i class="fa-solid fa-hotel text-base block mb-1"></i> Stays
+      </button>
+      <button onclick="switchTab('food')" id="tab-food" class="top-nav-btn p-2 rounded-xl bg-gray-100 text-gray-600">
+        <i class="fa-solid fa-utensils text-base block mb-1"></i> Food
+      </button>
+      <button onclick="switchTab('medicines')" id="tab-medicines" class="top-nav-btn p-2 rounded-xl bg-gray-100 text-gray-600">
+        <i class="fa-solid fa-pills text-base block mb-1"></i> Medicines
+      </button>
+      <button onclick="switchTab('cabs')" id="tab-cabs" class="top-nav-btn p-2 rounded-xl bg-gray-100 text-gray-600">
+        <i class="fa-solid fa-car text-base block mb-1"></i> Cabs
+      </button>
+    </div>
+  </div>
+
+  <main class="p-4 max-w-lg mx-auto">
+    
+    <!-- 1. STAYS SECTION -->
+    <div id="section-stays" class="block space-y-3">
+      
+      <!-- Dynamic Category Chips Filter -->
+      <div class="flex gap-2 overflow-x-auto pb-1 text-xs font-semibold">
+        <button onclick="filterHotels(this, 'All')" class="filter-chip bg-prime-red text-white px-3 py-1.5 rounded-full border border-prime-red">All Stays</button>
+        <button onclick="filterHotels(this, 'Hotels')" class="filter-chip bg-white border border-gray-300 px-3 py-1.5 rounded-full text-gray-600">Hotels</button>
+        <button onclick="filterHotels(this, 'Resorts')" class="filter-chip bg-white border border-gray-300 px-3 py-1.5 rounded-full text-gray-600">Resorts</button>
+        <button onclick="filterHotels(this, 'Villas')" class="filter-chip bg-white border border-gray-300 px-3 py-1.5 rounded-full text-gray-600">Villas</button>
+        <button onclick="filterHotels(this, 'Bungalow')" class="filter-chip bg-white border border-gray-300 px-3 py-1.5 rounded-full text-gray-600">Bungalow</button>
+      </div>
+
+      <!-- Dynamic Budget Filter -->
+      <div class="bg-white p-3 rounded-xl border">
+        <label class="text-xs font-bold text-gray-700 flex justify-between">
+          <span>Max Budget Cap:</span>
+          <span class="text-prime-red font-extrabold" id="budgetValue">₹25,000</span>
+        </label>
+        <input type="range" id="budgetRange" min="2000" max="25000" step="500" value="25000" class="w-full accent-red-600 mt-2" oninput="applyHotelFilters()">
+      </div>
+
+      <!-- Hotels Grid -->
+      <div id="hotelsList" class="space-y-4"></div>
+    </div>
+
+    <!-- 2. FOOD SECTION -->
+    <div id="section-food" class="hidden space-y-3">
+      <div id="foodList" class="space-y-3"></div>
+    </div>
+
+    <!-- 3. MEDICINES SECTION -->
+    <div id="section-medicines" class="hidden">
+      <div class="bg-white p-4 rounded-xl shadow-sm border space-y-2 text-xs">
+        <h4 class="font-bold text-gray-800 text-sm">Pharmacy Order Request</h4>
+        <input type="text" id="medCustName" placeholder="Customer Name" class="w-full p-2.5 border rounded-xl">
+        <input type="text" id="medCustPhone" placeholder="Mobile Phone Number" class="w-full p-2.5 border rounded-xl">
+        <textarea id="medNotes" placeholder="Describe symptoms or required medicines..." class="w-full p-3 border rounded-xl h-24"></textarea>
+        <button onclick="submitMedicineOrder()" class="w-full bg-prime-red text-white py-3 rounded-xl font-bold shadow">Submit Order Request</button>
+      </div>
+    </div>
+
+    <!-- 4. CABS SECTION -->
+    <div id="section-cabs" class="hidden">
+      <div class="bg-white p-4 rounded-xl shadow-sm border space-y-2 text-xs">
+        <h4 class="font-bold uppercase text-prime-red text-sm">Cab Booking Terminal</h4>
+        <input type="text" id="cabName" placeholder="Customer Name" class="w-full p-2.5 border rounded-xl">
+        <input type="text" id="cabPhone" placeholder="Mobile Phone Number" class="w-full p-2.5 border rounded-xl">
+        <input type="text" id="cabPickup" placeholder="Pickup Address / Location" class="w-full p-2.5 border rounded-xl">
+        <input type="text" id="cabDrop" placeholder="Drop Location / Sightseeing" class="w-full p-2.5 border rounded-xl">
+        <select id="cabType" class="w-full p-2.5 border rounded-xl bg-white">
+          <option value="Full Day Tour">Full Day Sightseeing Tour</option>
+          <option value="Point to Point Short">Point to Point Taxi</option>
+        </select>
+        <button onclick="submitCabBooking()" class="w-full bg-prime-red text-white py-3 rounded-xl font-bold shadow">Request Taxi Dispatch</button>
+      </div>
+    </div>
+
+    <!-- 5. CART & CHECKOUT SECTION -->
+    <div id="section-cart" class="hidden space-y-3">
+      <h3 class="font-bold text-sm text-gray-800">Food Delivery Basket</h3>
+      <div id="cartItemsList" class="space-y-2"></div>
+      
+      <div class="bg-white p-4 rounded-xl border space-y-2 text-xs">
+        <h4 class="font-bold text-gray-700">Delivery Address Details</h4>
+        <input type="text" id="custName" placeholder="Full Name" class="w-full p-2.5 border rounded-xl">
+        <input type="text" id="custPhone" placeholder="Mobile Phone Number" class="w-full p-2.5 border rounded-xl">
+        <input type="text" id="custAddress" placeholder="Delivery Address / Landmark" class="w-full p-2.5 border rounded-xl">
+        <input type="number" id="custDistance" placeholder="Distance from restaurant (KM)" class="w-full p-2.5 border rounded-xl" oninput="calculateTotalCart()">
+        
+        <div class="border-t pt-2 space-y-1">
+          <div class="flex justify-between"><span>Subtotal:</span><span id="cartSubtotal" class="font-bold">₹0</span></div>
+          <div class="flex justify-between"><span>Delivery Charge:</span><span id="cartDeliveryFee" class="font-bold">₹0</span></div>
+          <div class="flex justify-between text-sm font-black text-prime-red border-t pt-1"><span>Total Payable:</span><span id="cartTotal">₹0</span></div>
+        </div>
+
+        <button onclick="checkoutFoodOrder()" class="w-full bg-green-600 text-white py-3 rounded-xl font-bold shadow mt-2">Dispatch Order via WhatsApp</button>
+      </div>
+    </div>
+
+    <!-- 6. REPORTS & SALES ANALYTICS -->
+    <div id="section-reports" class="hidden space-y-3">
+      <h3 class="font-bold text-sm text-gray-800">Sales & System Orders Log</h3>
+      <div id="reportsContainer" class="space-y-2 text-xs"></div>
+    </div>
+
+  </main>
+
+  <!-- DYNAMIC HOTEL BOOKING MODAL -->
+  <div id="hotelModal" class="fixed inset-0 bg-black/50 hidden z-50 flex items-center justify-center p-4">
+    <div class="bg-white w-full max-w-sm rounded-2xl p-4 space-y-3 text-xs">
+      <div class="flex justify-between items-center border-b pb-2">
+        <h3 id="modalHotelTitle" class="font-bold text-sm text-gray-800">Book Room</h3>
+        <button onclick="closeHotelModal()" class="text-gray-400 font-bold">✕</button>
+      </div>
+      
+      <input type="text" id="bookCustName" placeholder="Customer Name" class="w-full p-2.5 border rounded-xl">
+      <input type="text" id="bookCustPhone" placeholder="Mobile Phone Number" class="w-full p-2.5 border rounded-xl">
+      
+      <select id="bookRoomType" class="w-full p-2.5 border rounded-xl bg-white" onchange="updateDynamicHotelPrice()">
+        <option value="Standard Room" data-multiplier="1">Standard Room (Base Rate)</option>
+        <option value="Deluxe Room" data-multiplier="1.25">Deluxe Room (+25%)</option>
+        <option value="Super Deluxe Suite" data-multiplier="1.6">Super Deluxe Suite (+60%)</option>
+      </select>
+
+      <select id="bookGuests" class="w-full p-2.5 border rounded-xl bg-white">
+        <option value="1 Member">1 Member</option>
+        <option value="2 Members">2 Members</option>
+        <option value="2+1 Members (Extra Bed)">2+1 Members (Extra Bed)</option>
+      </select>
+
+      <div class="grid grid-cols-2 gap-2">
+        <div>
+          <label class="block text-[10px] text-gray-500 font-bold mb-1">Check-in Date</label>
+          <input type="date" id="bookCheckIn" class="w-full p-2 border rounded-xl" onchange="updateDynamicHotelPrice()">
+        </div>
+        <div>
+          <label class="block text-[10px] text-gray-500 font-bold mb-1">Check-out Date</label>
+          <input type="date" id="bookCheckOut" class="w-full p-2 border rounded-xl" onchange="updateDynamicHotelPrice()">
+        </div>
+      </div>
+
+      <div class="bg-red-50 p-2.5 rounded-xl border border-red-100 flex justify-between items-center text-xs font-bold text-prime-red">
+        <span>Calculated Total Stay:</span>
+        <span id="modalEstPrice" class="text-sm font-black">₹0</span>
+      </div>
+
+      <button onclick="confirmHotelBooking()" class="w-full bg-prime-red text-white py-2.5 rounded-xl font-bold shadow">
+        Confirm & Reserve via WhatsApp
+      </button>
+    </div>
+  </div>
+
+  <!-- Bottom Navigation -->
+  <footer class="fixed bottom-0 left-0 right-0 bg-white border-t flex justify-around py-2 shadow-2xl z-40 text-center text-xs">
+    <button onclick="switchTab('stays')" class="text-prime-red"><i class="fa-solid fa-compass text-base block"></i>Explore</button>
+    <button onclick="switchTab('cart')" class="text-gray-400 relative">
+      <i class="fa-solid fa-basket-shopping text-base block"></i>Cart
+      <span id="cartBadge" class="absolute -top-1 -right-1 bg-prime-red text-white text-[9px] w-4 h-4 rounded-full flex items-center justify-center font-bold">0</span>
+    </button>
+    <button onclick="switchTab('reports')" class="text-gray-400"><i class="fa-solid fa-chart-line text-base block"></i>Reports</button>
+  </footer>
+
+  <!-- Core Script Engine -->
+  <script>
+    const defaultHotels = [
+      { id: 1, name: "Le Méridien Mahabaleshwar Resort", type: "Resorts", price: 16500, amenities: "Pool, Forest View, Spa", mapUrl: "https://maps.google.com", imgUrl: "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=500" },
+      { id: 2, name: "Brightland Resort & Spa", type: "Resorts", price: 8500, amenities: "Cliff View, WiFi", mapUrl: "https://maps.google.com", imgUrl: "https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?w=500" },
+      { id: 3, name: "Cloud-Nine Cliffside Glasshouse", type: "Villas", price: 14000, amenities: "Private Balcony, Glass Structure", mapUrl: "https://maps.google.com", imgUrl: "https://images.unsplash.com/photo-1613490493576-7fde63acd811?w=500" }
+    ];
+
+    const defaultDishes = [
+      { id: 1, restaurantName: "Peter's Cafe", name: "Peter's Sizzling Chicken Steak", price: 480, category: "Non-Veg", desc: "Tossed veggies & pepper sauce" },
+      { id: 2, restaurantName: "Peter's Cafe", name: "Artisanal Loaded Cheese Flatbread", price: 390, category: "Fast Food", desc: "Woodfired thin crust" }
+    ];
+
+    let currentSelectedHotel = null;
+    let calculatedTotalHotelPrice = 0;
+    let selectedTypeFilter = 'All';
+    let cart = [];
+
+    // FIXED: TOP NAVIGATION TAB SWITCHING & RED COLOR HIGHLIGHT
+    function switchTab(tab) {
+      // Hide all main section views
+      ['stays', 'food', 'medicines', 'cabs', 'cart', 'reports'].forEach(t => {
+        const el = document.getElementById(`section-${t}`);
+        if(el) el.classList.add('hidden');
+      });
+
+      // Show selected section
+      const activeSec = document.getElementById(`section-${tab}`);
+      if (activeSec) activeSec.classList.remove('hidden');
+
+      // Update Top Nav Button Highlight Colors
+      document.querySelectorAll('.top-nav-btn').forEach(btn => {
+        btn.className = "top-nav-btn p-2 rounded-xl bg-gray-100 text-gray-600";
+      });
+      const activeNavBtn = document.getElementById(`tab-${tab}`);
+      if (activeNavBtn) {
+        activeNavBtn.className = "top-nav-btn p-2 rounded-xl bg-prime-red text-white shadow";
+      }
+
+      if(tab === 'reports') loadReports();
+    }
+
+    function sendWhatsApp(msg) {
+      window.location.href = `https://wa.me/917768817510?text=${encodeURIComponent(msg)}`;
+    }
+
+    function recordOrder(type, details, amount) {
+      const orders = JSON.parse(localStorage.getItem('pb_orders') || '[]');
+      orders.push({ type, details, amount, date: new Date().toLocaleString() });
+      localStorage.setItem('pb_orders', JSON.stringify(orders));
+    }
+
+    // FIXED: CATEGORY CHIPS SELECTION & RED COLOR HIGHLIGHT
+    function filterHotels(btnElement, category) {
+      selectedTypeFilter = category;
+
+      // Reset all category chip colors
+      document.querySelectorAll('.filter-chip').forEach(btn => {
+        btn.className = "filter-chip bg-white border border-gray-300 px-3 py-1.5 rounded-full text-gray-600";
+      });
+
+      // Apply red highlight to selected chip
+      if(btnElement) {
+        btnElement.className = "filter-chip bg-prime-red text-white px-3 py-1.5 rounded-full border border-prime-red shadow-sm";
+      }
+
+      applyHotelFilters();
+    }
+
+    function applyHotelFilters() {
+      const maxBudget = Number(document.getElementById('budgetRange').value);
+      document.getElementById('budgetValue').innerText = `₹${maxBudget.toLocaleString()}`;
+      
+      const customHotels = JSON.parse(localStorage.getItem('pb_hotels') || '[]');
+      const allHotels = [...defaultHotels, ...customHotels];
+
+      const filtered = allHotels.filter(h => {
+        const matchCategory = (selectedTypeFilter === 'All' || h.type === selectedTypeFilter);
+        const matchPrice = Number(h.price) <= maxBudget;
+        return matchCategory && matchPrice;
+      });
+
+      const container = document.getElementById('hotelsList');
+      container.innerHTML = filtered.map(h => `
+        <div class="bg-white rounded-2xl overflow-hidden shadow-sm border">
+          <img src="${h.imgUrl}" class="w-full h-40 object-cover">
+          <div class="p-4">
+            <div class="flex justify-between items-start">
+              <h3 class="font-bold text-gray-800 text-sm">${h.name}</h3>
+              <span class="text-[10px] bg-red-100 text-prime-red font-bold px-2 py-0.5 rounded">${h.type}</span>
+            </div>
+            <p class="text-[10px] text-gray-500 my-1">${h.amenities || ''}</p>
+            <a href="${h.mapUrl || '#'}" target="_blank" class="text-[10px] text-blue-600 underline font-bold"><i class="fa-solid fa-map-location-dot"></i> View Google Map Location</a>
+            <div class="flex justify-between items-center border-t pt-2 mt-2">
+              <span class="text-lg font-black text-prime-red">₹${Number(h.price).toLocaleString()}</span>
+              <button onclick="openHotelModal('${h.name}', ${h.price})" class="bg-prime-red text-white text-xs px-4 py-2 rounded-xl font-bold">Reserve Room</button>
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function openHotelModal(name, price) {
+      currentSelectedHotel = { name, basePrice: Number(price) };
+      document.getElementById('modalHotelTitle').innerText = name;
+
+      const today = new Date();
+      const tomorrow = new Date();
+      tomorrow.setDate(today.getDate() + 1);
+
+      document.getElementById('bookCheckIn').value = today.toISOString().split('T')[0];
+      document.getElementById('bookCheckOut').value = tomorrow.toISOString().split('T')[0];
+
+      updateDynamicHotelPrice();
+      document.getElementById('hotelModal').classList.remove('hidden');
+    }
+
+    function closeHotelModal() {
+      document.getElementById('hotelModal').classList.add('hidden');
+    }
+
+    function updateDynamicHotelPrice() {
+      if (!currentSelectedHotel) return;
+
+      const checkInVal = document.getElementById('bookCheckIn').value;
+      const checkOutVal = document.getElementById('bookCheckOut').value;
+      const roomSelect = document.getElementById('bookRoomType');
+      const multiplier = Number(roomSelect.options[roomSelect.selectedIndex].getAttribute('data-multiplier') || 1);
+
+      if (checkInVal && checkOutVal) {
+        const d1 = new Date(checkInVal);
+        const d2 = new Date(checkOutVal);
+        
+        const timeDiff = d2.getTime() - d1.getTime();
+        let nights = Math.ceil(timeDiff / (1000 * 3600 * 24));
+        if (nights <= 0) nights = 1;
+
+        calculatedTotalHotelPrice = Math.round((currentSelectedHotel.basePrice * multiplier) * nights);
+        document.getElementById('modalEstPrice').innerText = `₹${calculatedTotalHotelPrice.toLocaleString()} (${nights} Night${nights > 1 ? 's' : ''})`;
+      }
+    }
+
+    function confirmHotelBooking() {
+      const name = document.getElementById('bookCustName').value;
+      const phone = document.getElementById('bookCustPhone').value;
+      const room = document.getElementById('bookRoomType').value;
+      const guests = document.getElementById('bookGuests').value;
+      const checkIn = document.getElementById('bookCheckIn').value;
+      const checkOut = document.getElementById('bookCheckOut').value;
+
+      if(!name || !phone) return alert("Please fill out customer name and phone number!");
+
+      const msg = `Hello PRIMEBOOKIN, New Dynamic Room Booking Request:\n\n❖ Hotel: ${currentSelectedHotel.name}\n❖ Customer: ${name} (${phone})\n❖ Selected Room: ${room}\n❖ Guests: ${guests}\n❖ Check-in: ${checkIn}\n❖ Check-out: ${checkOut}\n❖ Calculated Dynamic Total: ₹${calculatedTotalHotelPrice.toLocaleString()}`;
+      
+      recordOrder('Hotel Booking', `${currentSelectedHotel.name} (${room}) - ${checkIn} to ${checkOut}`, `₹${calculatedTotalHotelPrice.toLocaleString()}`);
+      closeHotelModal();
+      sendWhatsApp(msg);
+    }
+
+    // FOOD & CART SYSTEM
+    function renderFoodItems() {
+      const customDishes = JSON.parse(localStorage.getItem('pb_dishes') || '[]');
+      const allDishes = [...defaultDishes, ...customDishes];
+      
+      const container = document.getElementById('foodList');
+      container.innerHTML = allDishes.map(d => `
+        <div class="bg-white p-3 rounded-xl border flex justify-between items-center text-xs">
+          <div>
+            <span class="text-[9px] bg-red-100 text-prime-red font-bold px-1.5 py-0.5 rounded uppercase">${d.category}</span>
+            <h4 class="font-bold mt-1">${d.name}</h4>
+            <p class="text-[10px] text-gray-400">${d.restaurantName} • ${d.desc || ''}</p>
+            <span class="text-prime-red font-bold">₹${d.price}</span>
+          </div>
+          <button onclick="addToCart('${d.name}', ${d.price})" class="border border-prime-red text-prime-red text-xs px-3 py-1.5 rounded-lg font-bold">+ Add</button>
+        </div>
+      `).join('');
+    }
+
+    function addToCart(name, price) {
+      const found = cart.find(i => i.name === name);
+      if(found) { found.qty++; } else { cart.push({ name, price, qty: 1 }); }
+      updateCartUI();
+      alert(`Added ${name} to checkout basket!`);
+    }
+
+    function updateCartUI() {
+      document.getElementById('cartBadge').innerText = cart.reduce((a, b) => a + b.qty, 0);
+      const list = document.getElementById('cartItemsList');
+      
+      list.innerHTML = cart.map((item, idx) => `
+        <div class="bg-white p-3 rounded-xl border flex justify-between items-center text-xs">
+          <div>
+            <p class="font-bold">${item.name}</p>
+            <span class="text-gray-500">₹${item.price} x ${item.qty}</span>
+          </div>
+          <div class="flex gap-2 items-center">
+            <button onclick="changeQty(${idx}, -1)" class="px-2 py-1 bg-gray-200 rounded font-bold">-</button>
+            <span>${item.qty}</span>
+            <button onclick="changeQty(${idx}, 1)" class="px-2 py-1 bg-gray-200 rounded font-bold">+</button>
+          </div>
+        </div>
+      `).join('');
+
+      calculateTotalCart();
+    }
+
+    function changeQty(idx, delta) {
+      cart[idx].qty += delta;
+      if(cart[idx].qty <= 0) cart.splice(idx, 1);
+      updateCartUI();
+    }
+
+    function calculateTotalCart() {
+      const subtotal = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
+      const dist = Number(document.getElementById('custDistance').value || 1);
+      
+      const deliveryFee = dist <= 1 ? 55 : (dist * 45);
+      const grandTotal = subtotal + deliveryFee;
+
+      document.getElementById('cartSubtotal').innerText = `₹${subtotal}`;
+      document.getElementById('cartDeliveryFee').innerText = `₹${deliveryFee}`;
+      document.getElementById('cartTotal').innerText = `₹${grandTotal}`;
+    }
+
+    function checkoutFoodOrder() {
+      const name = document.getElementById('custName').value;
+      const phone = document.getElementById('custPhone').value;
+      const address = document.getElementById('custAddress').value;
+
+      if(!name || !phone || cart.length === 0) return alert("Fill contact details & add items!");
+
+      const itemsText = cart.map(i => `• ${i.name} (Qty ${i.qty}) - ₹${i.price * i.qty}`).join('\n');
+      const total = document.getElementById('cartTotal').innerText;
+      
+      const msg = `Hello PRIMEBOOKIN, New Food Order:\n\n❖ Customer: ${name} (${phone})\n❖ Delivery Address: ${address}\n\n❖ ITEMS:\n${itemsText}\n\n❖ Gross Total: ${total}`;
+      
+      recordOrder('Food Order', itemsText, total);
+      sendWhatsApp(msg);
+    }
+
+    // MEDICINES & CABS
+    function submitMedicineOrder() {
+      const name = document.getElementById('medCustName').value;
+      const phone = document.getElementById('medCustPhone').value;
+      const notes = document.getElementById('medNotes').value;
+
+      if(!name || !phone) return alert("Enter customer details!");
+
+      const msg = `Hello PRIMEBOOKIN, Pharmacy Order Request:\nCustomer: ${name} (${phone})\nPrescription Details: ${notes}`;
+      recordOrder('Medicine Order', notes, 'Quote Pending');
+      sendWhatsApp(msg);
+    }
+
+    function submitCabBooking() {
+      const name = document.getElementById('cabName').value;
+      const phone = document.getElementById('cabPhone').value;
+      const p = document.getElementById('cabPickup').value;
+      const d = document.getElementById('cabDrop').value;
+      const type = document.getElementById('cabType').value;
+
+      if(!name || !phone) return alert("Enter customer details!");
+
+      const msg = `Hello PRIMEBOOKIN, Cab Booking Request:\nCustomer: ${name} (${phone})\nPickup: ${p}\nDrop: ${d}\nPackage: ${type}`;
+      recordOrder('Cab Service', `${p} to ${d}`, 'Rate calculated on dispatch');
+      sendWhatsApp(msg);
+    }
+
+    // REPORTS GENERATOR
+    function loadReports() {
+      const orders = JSON.parse(localStorage.getItem('pb_orders') || '[]');
+      const container = document.getElementById('reportsContainer');
+
+      if(orders.length === 0) {
+        container.innerHTML = `<p class="text-gray-400">No order logs recorded yet.</p>`;
+        return;
+      }
+
+      container.innerHTML = orders.map(o => `
+        <div class="bg-white p-3 rounded-xl border">
+          <div class="flex justify-between font-bold text-prime-red">
+            <span>${o.type}</span>
+            <span>${o.amount}</span>
+          </div>
+          <p class="text-[10px] text-gray-500 my-1">${o.details}</p>
+          <span class="text-[9px] text-gray-400">${o.date}</span>
+        </div>
+      `).join('');
+    }
+
+    window.onload = function() {
+      applyHotelFilters();
+      renderFoodItems();
+    };
+  </script>
+</body>
+</html>

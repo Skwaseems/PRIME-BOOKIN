@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Primehotels Owner Console</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 p-4 font-sans">
+  <div class="max-w-md mx-auto bg-white p-5 rounded-2xl shadow border">
+    
+    <div class="border-b pb-3 mb-4 flex justify-between items-center">
+      <div>
+        <h1 class="text-xl font-black text-red-600">PRIMEHOTELS</h1>
+        <p class="text-[10px] font-bold text-gray-500">HOTEL & RESORT MANAGEMENT</p>
+      </div>
+      <span id="authBadge" class="bg-yellow-100 text-yellow-700 text-[10px] font-bold px-2.5 py-1 rounded-full">Pending Login</span>
+    </div>
+
+    <!-- Login Section -->
+    <div id="loginBox" class="mb-4">
+      <input type="text" id="ownerPhone" placeholder="Registered Owner Phone Number" class="w-full text-xs p-3 border rounded-xl mb-2">
+      <button onclick="verifyHotelOwner()" class="w-full bg-red-600 text-white text-xs py-2.5 rounded-xl font-bold">Log In to Console</button>
+    </div>
+
+    <!-- Inventory Form -->
+    <div id="hotelForm" class="hidden space-y-3">
+      <h2 class="text-xs font-bold text-gray-700 uppercase">Publish New Property / Room Listing</h2>
+      
+      <input type="text" id="hotelName" placeholder="Property / Hotel Name" class="w-full text-xs p-3 border rounded-xl">
+      
+      <select id="propertyType" class="w-full text-xs p-3 border rounded-xl bg-white">
+        <option value="Hotels">Hotels</option>
+        <option value="Resorts">Resorts</option>
+        <option value="Villas">Villas</option>
+        <option value="Bungalow">Bungalow</option>
+      </select>
+
+      <div class="grid grid-cols-2 gap-2">
+        <input type="text" id="roomType" placeholder="Room Type (e.g. Deluxe Suite)" class="w-full text-xs p-3 border rounded-xl">
+        <input type="number" id="roomPrice" placeholder="Price Per Night (₹)" class="w-full text-xs p-3 border rounded-xl">
+      </div>
+
+      <div class="grid grid-cols-2 gap-2">
+        <input type="number" id="minGuests" value="1" placeholder="Min Occupancy" class="w-full text-xs p-3 border rounded-xl">
+        <input type="number" id="maxGuests" value="3" placeholder="Max Occupancy (2+1)" class="w-full text-xs p-3 border rounded-xl">
+      </div>
+
+      <input type="text" id="amenities" placeholder="Amenities (WiFi, Pool, Breakfast)" class="w-full text-xs p-3 border rounded-xl">
+      <input type="text" id="mapUrl" placeholder="Google Maps Location URL" class="w-full text-xs p-3 border rounded-xl">
+      
+      <!-- Upload Photo from Local Storage -->
+      <div>
+        <label class="block text-[10px] font-bold text-gray-500 mb-1">UPLOAD PHOTO FROM PHONE GALLERY:</label>
+        <input type="file" accept="image/*" onchange="convertHotelImage(this)" class="w-full text-xs p-2 border rounded-xl bg-gray-50">
+      </div>
+      
+      <p class="text-[10px] text-center text-gray-400 font-bold">- OR USE IMAGE URL -</p>
+      <input type="text" id="imgUrl" placeholder="Image Web URL Link" class="w-full text-xs p-3 border rounded-xl">
+
+      <button onclick="saveHotelItem()" class="w-full bg-green-600 text-white text-xs py-3 rounded-xl font-bold shadow">
+        Publish Listing to Primebookin
+      </button>
+    </div>
+
+  </div>
+
+  <script>
+    let activeVendor = null;
+    let localHotelBase64 = "";
+
+    function convertHotelImage(input) {
+      const file = input.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onloadend = function() {
+          localHotelBase64 = reader.result;
+          alert("Hotel photo uploaded successfully!");
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+
+    function verifyHotelOwner() {
+      const phone = document.getElementById('ownerPhone').value.trim();
+      const vendors = JSON.parse(localStorage.getItem('pb_vendors') || '[]');
+      
+      const found = vendors.find(v => v.phone === phone && v.role.includes('Hotel'));
+
+      if (!found) {
+        alert("Account not found or role mismatch. Register in vendor.html first!");
+        return;
+      }
+
+      if (found.status !== 'approved') {
+        alert("Your account status is currently PENDING ADMIN APPROVAL. Please approve inside admin.html.");
+        return;
+      }
+
+      activeVendor = found;
+      document.getElementById('authBadge').className = "bg-green-100 text-green-700 text-[10px] font-bold px-2.5 py-1 rounded-full";
+      document.getElementById('authBadge').innerText = "Verified Owner";
+      document.getElementById('loginBox').classList.add('hidden');
+      document.getElementById('hotelForm').classList.remove('hidden');
+    }
+
+    function saveHotelItem() {
+      const selectedImg = localHotelBase64 || document.getElementById('imgUrl').value || 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=500';
+
+      const hotel = {
+        ownerPhone: activeVendor.phone,
+        name: document.getElementById('hotelName').value,
+        type: document.getElementById('propertyType').value,
+        roomType: document.getElementById('roomType').value,
+        price: Number(document.getElementById('roomPrice').value),
+        min: document.getElementById('minGuests').value,
+        max: document.getElementById('maxGuests').value,
+        amenities: document.getElementById('amenities').value,
+        mapUrl: document.getElementById('mapUrl').value || 'https://maps.google.com',
+        imgUrl: selectedImg
+      };
+
+      const hotels = JSON.parse(localStorage.getItem('pb_hotels') || '[]');
+      hotels.push(hotel);
+      localStorage.setItem('pb_hotels', JSON.stringify(hotels));
+
+      alert("Hotel/Property listing saved successfully!");
+      location.reload();
+    }
+  </script>
+</body>
+</html>

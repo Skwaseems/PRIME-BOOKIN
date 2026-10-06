@@ -1,125 +1,109 @@
-# Prime Bookin — Web App
+# Primebookin
 
-Premium multi-service ordering web app (cab, hotel, food, medical, grocery,
-local shops) with Google sign-in, a multi-store cart, and checkout. Built
-with Next.js (App Router), TypeScript, Tailwind CSS v4, Framer Motion,
-Firebase Authentication and Firestore.
+One platform for **Stays, Food, Medicines and Cabs** in Mahabaleshwar, Panchgani, Bhilar,
+Medha and nearby. It is a single web app (installable on phones) with:
 
-**Phase 1** (landing + Google sign-in) and **Phase 2** (browse, cart,
-checkout, order confirmation) are done. WhatsApp order automation and the
-admin/vendor/driver apps described in the full platform blueprint come in
-later phases — see Roadmap below.
+| Who | Where | What they do |
+|---|---|---|
+| Customers | `/` | Browse and order without an account. Every request is also sent as a WhatsApp message to Primebookin |
+| Hotels / villas | `/partner/<id>` | Confirm bookings, check guests in and out, manage rooms and photos |
+| Restaurants | `/partner/<id>` | New orders ring. Accept, prepare, mark ready, manage the menu and stock |
+| Medical stores | `/partner/<id>` | Prescription requests ring. First pharmacy to send a price gets the order |
+| Cab drivers | `/partner/<id>` | Go online. Nearby rides of their vehicle type ring, first to accept gets it. Customer OTP starts the ride |
+| Delivery partners | `/partner/<id>` | Go online. Nearby deliveries ring. Reached store → picked up → reached customer → delivered (OTP) |
+| Admin | `/admin` | Approve partners (with documents), all orders, live map, fares, commissions, privacy |
 
-## 1. Install dependencies
+New partners register at `/partner/register` with their documents (FSSAI, drug licence,
+GST, DL, RC, insurance, Aadhaar, PAN…) and accept the Partner Terms. **Nothing works until
+an admin approves them.**
+
+```
+primebookin/
+  client/   React + TypeScript web app
+            src/pb/     customer screens (Explore, stay & restaurant pages, Cart/checkout, Bookings, Support, legal)
+            src/panel/  partner registration, partner panels, admin panel
+  server/   Express + MongoDB API
+  docs/     Notes and the original HTML prototype (docs/legacy-prototype)
+```
+
+## Running locally
+
+Requirements: Node.js 20+ and a MongoDB database. We use a free **MongoDB Atlas** cluster:
+
+1. Sign up at https://www.mongodb.com/cloud/atlas/register and create a free **M0** cluster.
+2. *Database Access*: add a database user with a password.
+3. *Network Access*: add your IP address (or `0.0.0.0/0` while developing).
+4. *Connect → Drivers*: copy the `mongodb+srv://...` string, put your password in it, and
+   set it as `MONGO_URI` in `server/.env` (copy `server/.env.example` if `.env` doesn't exist).
+
+The app uses the `primebookin` database and the tests use `primebookin_test`, which they
+wipe on every run.
 
 ```bash
-npm install
+npm --prefix server install
+npm --prefix server run dev        # API on http://localhost:5000
 ```
-
-## 2. Firebase project setup
-
-You've already created the `prime-bookin` Firebase project and enabled
-Google sign-in. Two more things to turn on:
-
-1. **Firestore Database** — in the Firebase console, go to
-   **Build → Firestore Database → Create database**, start in production
-   mode, pick a region close to India (e.g. `asia-south1`).
-2. **Security rules** — this repo ships [firestore.rules](firestore.rules):
-   customers can create an order for themselves and read only their own
-   orders. Paste its contents into **Firestore Database → Rules** in the
-   console and publish (or deploy via the Firebase CLI once you have it
-   installed: `firebase deploy --only firestore:rules`). Without this,
-   checkout will fail with a permissions error, since new Firestore
-   databases deny all reads/writes by default.
-3. **Authorized domains** — in **Authentication → Settings → Authorized
-   domains**, add `primebookin.in` and `www.primebookin.in` once you deploy.
-
-## 3. Configure environment variables
-
-`.env.local` already has your real Firebase config and is git-ignored, so
-it won't be committed. If you ever need to recreate it, copy the example:
 
 ```bash
-cp .env.local.example .env.local
+npm --prefix client install
+npm --prefix client start          # app on http://localhost:3000
 ```
 
-## 4. Run the dev server
+On first start the server creates (all demo passwords are `demo123`):
 
-```bash
-npm run dev
-```
+| Account | Phone |
+|---|---|
+| Admin | 9999999999 / admin123 (set `ADMIN_PHONE` / `ADMIN_PASSWORD` in `server/.env`) |
+| Hotel (5 stays) | 9000000001 |
+| Peter's Cafe | 9000000002 |
+| City Medicals | 9000000003 |
+| Cab driver Santosh (Sedan) | 9000000004 |
+| Rider Ravi | 9000000005 |
+| Valley Spice Kitchen | 9000000006 |
+| Strawberry Hill Cafe | 9000000007 |
+| Cab driver Sunil (Hatchback) | 9000000008 |
+| Rider Amit | 9000000009 |
 
-Open [http://localhost:3000](http://localhost:3000).
+`npm run seed` in `server/` wipes the database and re-creates these.
+`npm test` runs the API tests (10 suites covering every flow).
 
-- Click **Continue with Google** to sign in.
-- Browse a category (e.g. Medical Store), add a couple of items, then check
-  the cart icon in the navbar.
-- Go to `/cart` → items are grouped by store with subtotal, delivery, GST
-  and grand total.
-- `/checkout` → fill in the delivery address (or use "Use my current
-  location" for a map preview), pick **Cash on Delivery** (the only payment
-  method wired up so far), and place the order.
-- You'll land on `/order/[id]` — the order is saved in Firestore under the
-  `orders` collection, scoped to your account.
+## How it works
 
-## 5. Test on your mobile
+**Requests** (`server/src/models/Enquiry.js`, lifecycle in `server/src/jobs.js`):
 
-### Quick look over Wi-Fi (same network as your PC)
+| Type | Goes to | Steps |
+|---|---|---|
+| Food / medicine basket | the store | new → accepted → preparing → ready → picked up → delivered. Nearby online riders are alerted once the store accepts |
+| Medicine (text / prescription photo) | all open pharmacies in range | first to send a price takes it, then as above |
+| Room booking | the hotel | new → confirmed → checked in → completed |
+| Cab ride | online drivers within range with that vehicle type | first to accept → arrived → started (customer OTP) → completed |
+| Custom dish | admin / WhatsApp | new → handled |
 
-```bash
-npm run dev:mobile
-```
+- **Prices** are always calculated on the server.
+- **Delivery charge:** ₹60 for the first km + ₹20 per further km. The distance comes from the customer's map pin. Hot food only within 5 km of the restaurant.
+- **Cab fares:** per km by vehicle, with a minimum fare.
+- **Commissions:** taken per service.
+- **Rider share:** a % of the delivery charge.
+- All of these are editable in **Admin → Settings**.
 
-Find your PC's local IP (`ipconfig` on Windows, `ifconfig` on macOS/Linux),
-e.g. `192.168.1.5`, and open `http://192.168.1.5:3000` on your phone. Allow
-Node through the Windows firewall if prompted. `next.config.ts` already
-allows `192.168.x.x`, `10.x.x.x`, `172.x.x.x` and `100.x.x.x` origins; add yours to
-`allowedDevOrigins` if your network uses a different range.
+**Live alerts**: panels keep a Server-Sent Events stream open (`/api/panel/:id/stream`,
+`/api/admin/stream`). They ring and vibrate while there are new orders / open jobs, and
+also refresh every 30 s as a fallback.
 
-Limitations: Google sign-in will likely fail (Firebase only authorizes
-`localhost` and domains you add), and "Use my current location" needs HTTPS.
+**Privacy** (DPDP Act 2023):
+- **Consent:** checkboxes on every customer form, and Partner Terms at registration.
+- **Limited sharing:** riders and drivers see contact details only after accepting.
+- **Automatic deletion:** names, phones, addresses, locations, medicine notes and prescription photos are deleted automatically **90 days** after a request finishes (configurable). This runs every 6 h, or on demand from the admin dashboard.
+- **Customer erasure:** customers can delete their details now from Bookings.
+- **Secret keys:** requests are looked up only with a secret key kept on the customer's phone.
+- **Policy pages:** see `/privacy`, `/terms` and `/partner-terms`.
 
-### Full test with sign-in and location (HTTPS)
+## Next steps
 
-- **Vercel (recommended):** import the repo at vercel.com, add the
-  `NEXT_PUBLIC_FIREBASE_*` values from `.env.local` as environment
-  variables, deploy, then add the `*.vercel.app` domain under Firebase
-  **Authentication → Settings → Authorized domains**.
-- **Tunnel:** run `npm run dev` and `npx ngrok http 3000`, open the
-  `https://…ngrok-free.app` URL on your phone, and add that domain to
-  Firebase Authorized domains (it changes on each restart of the free tier).
-
-Tip: use **Add to Home Screen** in Chrome/Safari — the app ships a web
-manifest and icons, so it opens full-screen like an installed app.
-
-## Project structure
-
-```
-src/
-  app/
-    page.tsx                  Landing page
-    services/[category]/      Category listing (cabs, hotels, food, medical, grocery, other)
-    cart/                     Cart page
-    checkout/                 Checkout: address, location, payment method
-    order/[orderId]/          Order confirmation (reads from Firestore)
-  components/                 Navbar, Hero, ServiceCategories, OfferingCard, etc.
-  context/                    AuthContext, ThemeContext, CartContext (localStorage-persisted)
-  data/catalog.ts             Mock stores + offerings per category (swap for real data later)
-  lib/firebase.ts             Firebase app + auth + Firestore initialization
-firestore.rules               Security rules for the `orders` collection
-```
-
-## Roadmap (next phases)
-
-- Replace `src/data/catalog.ts` mock data with real store/product data in
-  Firestore, plus a vendor portal to manage it
-- Razorpay integration for UPI/Card/Wallet (currently disabled — COD only)
-- Google Maps Distance Matrix for real distance-based delivery pricing
-  (currently a flat ₹40/store fee) and drag-to-pin address selection
-  (currently browser geolocation + a read-only map preview)
-- WhatsApp order notifications to store owners and admin
-- Admin dashboard (orders, stores, users, analytics, commissions)
-- Vendor/partner portal, delivery-partner app, cab-driver app — these are
-  best built as separate Flutter/React Native apps sharing this same
-  Firebase backend, once the web app's data model has stabilized
-- Deployment to Firebase Hosting under `www.primebookin.in`
+1. Payments (Razorpay / Cashfree: UPI, cards, netbanking) and partner payouts
+2. SMS OTP login (Fast2SMS / Twilio) and push notifications (Firebase) so phones ring even when the app is closed
+3. Move photos and documents from the database to cloud storage (e.g. Cloudinary / S3)
+4. Paid maps for production traffic (Google Maps / MapmyIndia; OpenStreetMap's free services are for light use)
+5. Surge / night fees, town zones (Mahabaleshwar, Panchgani, Bhilar, Medha), ratings & reviews
+6. AI features from the blueprint (prescription reader, recommendations, Marathi/Hindi search)
+7. Deployment (server + database + domain + HTTPS), then Play Store app (wrap the web app or Flutter)

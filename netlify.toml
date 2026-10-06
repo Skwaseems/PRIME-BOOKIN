@@ -1,0 +1,15 @@
+# Netlify: builds and serves the web app (client/). The API runs on Render.
+[build]
+  base = "client"
+  command = "npm run build"
+  publish = "build"
+
+[build.environment]
+  NODE_VERSION = "20"
+  REACT_APP_API_URL = "https://primebookin-api.onrender.com/api"
+
+# Single-page app: every route is served by index.html.
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

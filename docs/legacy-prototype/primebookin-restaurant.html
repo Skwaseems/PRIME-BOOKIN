@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Primebookin Restaurant Console</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 p-4 font-sans">
+  <div class="max-w-md mx-auto bg-white p-5 rounded-2xl shadow border">
+    
+    <div class="border-b pb-3 mb-4 flex justify-between items-center">
+      <div>
+        <h1 class="text-xl font-black text-red-600">PRIME RESTAURANT</h1>
+        <p class="text-[10px] font-bold text-gray-500">KITCHEN & MENU MANAGEMENT</p>
+      </div>
+      <span id="restBadge" class="bg-yellow-100 text-yellow-700 text-[10px] font-bold px-2.5 py-1 rounded-full">Pending Login</span>
+    </div>
+
+    <!-- Login Section -->
+    <div id="restLogin">
+      <input type="text" id="restPhone" placeholder="Registered Owner Phone Number" class="w-full text-xs p-3 border rounded-xl mb-2">
+      <button onclick="verifyRestaurantOwner()" class="w-full bg-red-600 text-white text-xs py-2.5 rounded-xl font-bold">Access Kitchen Console</button>
+    </div>
+
+    <!-- Menu Manager -->
+    <div id="restMenuForm" class="hidden space-y-3">
+      <h2 class="text-xs font-bold text-gray-700 uppercase">Add Dish / Menu Item</h2>
+      
+      <input type="text" id="dishName" placeholder="Dish / Item Name" class="w-full text-xs p-3 border rounded-xl">
+      <textarea id="dishDesc" placeholder="Dish description (e.g. Tossed veggies & pepper sauce)" class="w-full text-xs p-3 border rounded-xl h-16"></textarea>
+
+      <div class="grid grid-cols-2 gap-2">
+        <select id="foodCategory" class="w-full text-xs p-3 border rounded-xl bg-white">
+          <option value="Veg">Veg</option>
+          <option value="Non-Veg">Non-Veg</option>
+          <option value="Fast Food">Fast Food</option>
+          <option value="Cafe">Cafe</option>
+          <option value="Chinese">Chinese</option>
+        </select>
+        <input type="number" id="dishPrice" placeholder="Price (₹)" class="w-full text-xs p-3 border rounded-xl">
+      </div>
+
+      <!-- Upload Photo from Local Storage -->
+      <div>
+        <label class="block text-[10px] font-bold text-gray-500 mb-1">UPLOAD DISH PHOTO FROM PHONE:</label>
+        <input type="file" accept="image/*" onchange="convertFoodImage(this)" class="w-full text-xs p-2 border rounded-xl bg-gray-50">
+      </div>
+
+      <button onclick="addDishItem()" class="w-full bg-green-600 text-white text-xs py-3 rounded-xl font-bold shadow">
+        Publish Dish to Menu
+      </button>
+    </div>
+
+  </div>
+
+  <script>
+    let activeRest = null;
+    let localFoodBase64 = "";
+
+    function convertFoodImage(input) {
+      const file = input.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onloadend = function() {
+          localFoodBase64 = reader.result;
+          alert("Dish image uploaded successfully!");
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+
+    function verifyRestaurantOwner() {
+      const phone = document.getElementById('restPhone').value.trim();
+      const vendors = JSON.parse(localStorage.getItem('pb_vendors') || '[]');
+      const found = vendors.find(v => v.phone === phone && v.role.includes('Restaurant'));
+
+      if (!found || found.status !== 'approved') {
+        alert("Account unverified or awaiting Admin approval inside admin.html!");
+        return;
+      }
+
+      activeRest = found;
+      document.getElementById('restBadge').className = "bg-green-100 text-green-700 text-[10px] font-bold px-2.5 py-1 rounded-full";
+      document.getElementById('restBadge').innerText = "Verified Restaurant";
+      document.getElementById('restLogin').classList.add('hidden');
+      document.getElementById('restMenuForm').classList.remove('hidden');
+    }
+
+    function addDishItem() {
+      const dish = {
+        restaurantName: activeRest.businessName || 'Local Outlet',
+        name: document.getElementById('dishName').value,
+        desc: document.getElementById('dishDesc').value,
+        category: document.getElementById('foodCategory').value,
+        price: Number(document.getElementById('dishPrice').value),
+        imgUrl: localFoodBase64 || ''
+      };
+
+      const dishes = JSON.parse(localStorage.getItem('pb_dishes') || '[]');
+      dishes.push(dish);
+      localStorage.setItem('pb_dishes', JSON.stringify(dishes));
+
+      alert("Dish added to live digital menu!");
+      location.reload();
+    }
+  </script>
+</body>
+</html>

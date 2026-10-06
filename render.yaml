@@ -1,0 +1,30 @@
+# Render Blueprint for the Primebookin API (render.com → New → Blueprint).
+services:
+  - type: web
+    name: primebookin-api
+    runtime: node
+    plan: free
+    region: singapore
+    rootDir: server
+    buildCommand: npm install --omit=dev --no-audit --no-fund
+    startCommand: node src/index.js
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: MONGO_URI
+        sync: false # paste the Atlas connection string in the Render dashboard
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_EXPIRES_IN
+        value: 30d
+      - key: CORS_ORIGIN
+        value: https://primebookin-app.netlify.app
+      - key: ADMIN_PHONE
+        value: "9999999999"
+      - key: ADMIN_PASSWORD
+        sync: false # only used if no admin exists yet
+      - key: SUPPORT_WHATSAPP
+        value: "917768817510"
+      - key: MAPS_CONTACT
+        value: Primebookin support +91 7768817510

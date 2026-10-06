@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Primebookin Admin Console</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 p-4 font-sans">
+  <div class="max-w-xl mx-auto bg-white p-5 rounded-2xl shadow border">
+    <h1 class="text-xl font-black text-red-600 mb-4 border-b pb-2">PRIMEBOOKIN ADMIN DASHBOARD</h1>
+    
+    <h2 class="text-xs font-bold text-gray-700 mb-3 uppercase">Pending Approvals Queue</h2>
+    
+    <div id="vendorList" class="space-y-3">
+      <!-- Approvals load dynamically -->
+    </div>
+  </div>
+
+  <script>
+    function renderApprovals() {
+      const vendors = JSON.parse(localStorage.getItem('pb_vendors') || '[]');
+      const container = document.getElementById('vendorList');
+      
+      if(vendors.length === 0) {
+        container.innerHTML = `<p class="text-xs text-gray-400">No pending partner registrations.</p>`;
+        return;
+      }
+
+      container.innerHTML = vendors.map((v, index) => `
+        <div class="p-3 bg-gray-50 rounded-xl border flex justify-between items-center text-xs">
+          <div>
+            <p class="font-bold text-gray-800">${v.businessName}</p>
+            <p class="text-gray-500">${v.name} • ${v.phone}</p>
+            <span class="text-[10px] bg-red-100 text-red-600 font-bold px-2 py-0.5 rounded">${v.role}</span>
+          </div>
+          <div>
+            ${v.status === 'pending' ? `
+              <button onclick="updateStatus(${index}, 'approved')" class="bg-green-600 text-white px-3 py-1.5 rounded-lg font-bold mr-1">Approve</button>
+              <button onclick="updateStatus(${index}, 'rejected')" class="bg-gray-300 text-gray-700 px-3 py-1.5 rounded-lg font-bold">Reject</button>
+            ` : `
+              <span class="font-bold text-green-600">${v.status.toUpperCase()}</span>
+            `}
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function updateStatus(index, status) {
+      const vendors = JSON.parse(localStorage.getItem('pb_vendors') || '[]');
+      vendors[index].status = status;
+      localStorage.setItem('pb_vendors', JSON.stringify(vendors));
+      renderApprovals();
+    }
+
+    window.onload = renderApprovals;
+  </script>
+</body>
+</html>
